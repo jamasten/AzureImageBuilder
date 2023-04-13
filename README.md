@@ -44,15 +44,15 @@ To deploy this solution, the principal must have Owner privileges on the Azure s
 
 ### Azure Portal
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fjamasten%2FAzure%2Fmaster%2Fsolutions%2FimageBuilder%2Fsolution.json)
-[![Deploy to Azure Gov](https://aka.ms/deploytoazuregovbutton)](https://portal.azure.us/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fjamasten%2FAzure%2Fmaster%2Fsolutions%2FimageBuilder%2Fsolution.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fjamasten%2FAzureImageBuilder%2Fmain%2Fsolution.json)
+[![Deploy to Azure Gov](https://aka.ms/deploytoazuregovbutton)](https://portal.azure.us/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fjamasten%2FAzureImageBuilder%2Fmain%2Fsolution.json)
 
 ### PowerShell
 
 ````powershell
 New-AzDeployment `
     -Location '<Azure location>' `
-    -TemplateFile 'https://github.com/jamasten/Azure/blob/master/solutions/imageBuilder/solution.json' `
+    -TemplateFile 'https://raw.githubusercontent.com/jamasten/AzureImageBuilder/main/solution.json' `
     -Verbose
 ````
 
@@ -61,5 +61,5 @@ New-AzDeployment `
 ````cli
 az deployment sub create \
     --location '<Azure location>' \
-    --template-uri 'https://github.com/jamasten/Azure/blob/master/solutions/imageBuilder/solution.json'
+    --template-uri 'https://raw.githubusercontent.com/jamasten/AzureImageBuilder/main/solution.json'
 ````
