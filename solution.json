@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.16.2.56959",
-      "templateHash": "362571186955559267"
+      "templateHash": "11040550179806309910"
     }
   },
   "parameters": {
@@ -740,7 +740,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.16.2.56959",
-              "templateHash": "13932002706221793454"
+              "templateHash": "13223445798526102824"
             }
           },
           "parameters": {
@@ -790,7 +790,7 @@
                 "forceUpdateTag": "[parameters('Timestamp')]",
                 "azPowerShellVersion": "5.4",
                 "arguments": "[format('-SubnetName {0} -VirtualNetworkName {1} -VirtualNetworkResourceGroupName {2}', parameters('SubnetName'), parameters('VirtualNetworkName'), parameters('VirtualNetworkResourceGroupName'))]",
-                "primaryScriptUri": "https://raw.githubusercontent.com/jamasten/Azure/main/solutions/imageBuilder/scripts/Disable-AzurePrivateLinkServiceNetworkPolicy.ps1",
+                "primaryScriptUri": "https://raw.githubusercontent.com/jamasten/AzureImageBuilder/main/scripts/Disable-AzurePrivateLinkServiceNetworkPolicy.ps1",
                 "timeout": "PT2H",
                 "cleanupPreference": "OnSuccess",
                 "retentionInterval": "P1D"
