@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.16.1.55165",
-      "templateHash": "12432693594503622408"
+      "version": "0.16.2.56959",
+      "templateHash": "3207543940049239141"
     }
   },
   "parameters": {
@@ -56,26 +56,6 @@
       "defaultValue": true,
       "metadata": {
         "description": "Determine whether you want to install Microsoft Visio in the image."
-      }
-    },
-    "DistributionGroup": {
-      "type": "string",
-      "metadata": {
-        "description": "The distribution group that will recieve email alerts when an AIB image build either succeeds or fails."
-      }
-    },
-    "EnableBuildAutomation": {
-      "type": "bool",
-      "defaultValue": true,
-      "metadata": {
-        "description": "Determine whether you want to enable build automation.  This feature will check daily if a new marketplace image exists and will initiate a build if the image date is newer than the last build date."
-      }
-    },
-    "EnableMonitoringAndAlerting": {
-      "type": "bool",
-      "defaultValue": true,
-      "metadata": {
-        "description": "Determine whether you want to enable monitoring and alerting for the AIB image builds."
       }
     },
     "Environment": {
@@ -228,8 +208,6 @@
     }
   },
   "variables": {
-    "ActionGroupName": "[format('ag-{0}', variables('NamingStandard'))]",
-    "AutomationAccountName": "[format('aa-{0}', variables('NamingStandard'))]",
     "DeploymentScriptName": "[format('ds-{0}', variables('NamingStandard'))]",
     "ImageTemplateName": "[format('it-{0}-{1}-{2}', toLower(parameters('ImageDefinitionName')), parameters('Environment'), variables('LocationShortName'))]",
     "LocationShortName": "[variables('LocationShortNames')[parameters('Location')]]",
@@ -288,11 +266,9 @@
       "westus2": "wu2",
       "westus3": "wu3"
     },
-    "LogAnalyticsWorkspaceName": "[format('law-{0}', variables('NamingStandard'))]",
     "NamingStandard": "[format('aib-{0}-{1}', parameters('Environment'), variables('LocationShortName'))]",
     "ResourceGroup": "[format('rg-{0}', variables('NamingStandard'))]",
-    "Roles": "[union(variables('Roles_Default'), variables('Role_AzureCloud'))]",
-    "Roles_Default": [
+    "Roles": [
       {
         "resourceGroup": "[parameters('VirtualNetworkResourceGroupName')]",
         "name": "Virtual Network Join",
@@ -343,67 +319,8 @@
         ]
       }
     ],
-    "Role_AzureCloud": "[if(equals(environment().name, 'AzureCloud'), createArray(createObject('resourceGroup', variables('ResourceGroup'), 'name', 'Image Template Build Automation', 'description', 'Allow Image Template build automation using a Managed Identity on an Automation Account.', 'permissions', createArray(createObject('actions', createArray('Microsoft.VirtualMachineImages/imageTemplates/run/action', 'Microsoft.VirtualMachineImages/imageTemplates/read', 'Microsoft.Compute/locations/publishers/artifacttypes/offers/skus/versions/read', 'Microsoft.Compute/locations/publishers/artifacttypes/offers/skus/read', 'Microsoft.Compute/locations/publishers/artifacttypes/offers/read', 'Microsoft.Compute/locations/publishers/read'))))), createArray())]",
     "StagingResourceGroupName": "[format('rg-aib-{0}-{1}-staging-{2}', parameters('Environment'), variables('LocationShortName'), toLower(parameters('ImageDefinitionName')))]",
-    "StorageUri": "[format('https://{0}.blob.{1}/{2}/', parameters('StorageAccountName'), environment().suffixes.storage, parameters('StorageContainerName'))]",
-    "TimeZone": "[variables('TimeZones')[parameters('Location')]]",
-    "TimeZones": {
-      "australiacentral": "AUS Eastern Standard Time",
-      "australiacentral2": "AUS Eastern Standard Time",
-      "australiaeast": "AUS Eastern Standard Time",
-      "australiasoutheast": "AUS Eastern Standard Time",
-      "brazilsouth": "E. South America Standard Time",
-      "brazilsoutheast": "E. South America Standard Time",
-      "canadacentral": "Eastern Standard Time",
-      "canadaeast": "Eastern Standard Time",
-      "centralindia": "India Standard Time",
-      "centralus": "Central Standard Time",
-      "chinaeast": "China Standard Time",
-      "chinaeast2": "China Standard Time",
-      "chinanorth": "China Standard Time",
-      "chinanorth2": "China Standard Time",
-      "eastasia": "China Standard Time",
-      "eastus": "Eastern Standard Time",
-      "eastus2": "Eastern Standard Time",
-      "francecentral": "Central Europe Standard Time",
-      "francesouth": "Central Europe Standard Time",
-      "germanynorth": "Central Europe Standard Time",
-      "germanywestcentral": "Central Europe Standard Time",
-      "japaneast": "Tokyo Standard Time",
-      "japanwest": "Tokyo Standard Time",
-      "jioindiacentral": "India Standard Time",
-      "jioindiawest": "India Standard Time",
-      "koreacentral": "Korea Standard Time",
-      "koreasouth": "Korea Standard Time",
-      "northcentralus": "Central Standard Time",
-      "northeurope": "GMT Standard Time",
-      "norwayeast": "Central Europe Standard Time",
-      "norwaywest": "Central Europe Standard Time",
-      "southafricanorth": "South Africa Standard Time",
-      "southafricawest": "South Africa Standard Time",
-      "southcentralus": "Central Standard Time",
-      "southindia": "India Standard Time",
-      "southeastasia": "Singapore Standard Time",
-      "swedencentral": "Central Europe Standard Time",
-      "switzerlandnorth": "Central Europe Standard Time",
-      "switzerlandwest": "Central Europe Standard Time",
-      "uaecentral": "Arabian Standard Time",
-      "uaenorth": "Arabian Standard Time",
-      "uksouth": "GMT Standard Time",
-      "ukwest": "GMT Standard Time",
-      "usdodcentral": "Central Standard Time",
-      "usdodeast": "Eastern Standard Time",
-      "usgovarizona": "Mountain Standard Time",
-      "usgoviowa": "Central Standard Time",
-      "usgovtexas": "Central Standard Time",
-      "usgovvirginia": "Eastern Standard Time",
-      "westcentralus": "Mountain Standard Time",
-      "westeurope": "Central Europe Standard Time",
-      "westindia": "India Standard Time",
-      "westus": "Pacific Standard Time",
-      "westus2": "Pacific Standard Time",
-      "westus3": "Mountain Standard Time"
-    }
+    "StorageUri": "[format('https://{0}.blob.{1}/{2}/', parameters('StorageAccountName'), environment().suffixes.storage, parameters('StorageContainerName'))]"
   },
   "resources": [
     {
@@ -461,8 +378,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.16.1.55165",
-              "templateHash": "12714623282568001490"
+              "version": "0.16.2.56959",
+              "templateHash": "9735552976517993901"
             }
           },
           "parameters": {
@@ -521,7 +438,9 @@
         },
         "mode": "Incremental",
         "parameters": {
-          "PrincipalId": "[if(equals(variables('Roles')[range(0, length(variables('Roles')))[copyIndex()]].name, 'Image Template Build Automation'), createObject('value', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('AutomationAccount_{0}', parameters('Timestamp'))), '2022-09-01').outputs.principalId.value), createObject('value', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp'))), '2022-09-01').outputs.userAssignedIdentityPrincipalId.value))]",
+          "PrincipalId": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp'))), '2022-09-01').outputs.userAssignedIdentityPrincipalId.value]"
+          },
           "RoleDefinitionId": {
             "value": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', guid(variables('Roles')[range(0, length(variables('Roles')))[range(0, length(variables('Roles')))[copyIndex()]]].name, subscription().id))]"
           }
@@ -532,8 +451,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.16.1.55165",
-              "templateHash": "17109457504913498348"
+              "version": "0.16.2.56959",
+              "templateHash": "4005248515570104495"
             }
           },
           "parameters": {
@@ -576,7 +495,6 @@
         }
       },
       "dependsOn": [
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('AutomationAccount_{0}', parameters('Timestamp')))]",
         "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', guid(variables('Roles')[range(0, length(variables('Roles')))[range(0, length(variables('Roles')))[copyIndex()]]].name, subscription().id))]",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp')))]"
       ]
@@ -608,8 +526,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.16.1.55165",
-              "templateHash": "17109457504913498348"
+              "version": "0.16.2.56959",
+              "templateHash": "4005248515570104495"
             }
           },
           "parameters": {
@@ -652,79 +570,6 @@
         }
       },
       "dependsOn": [
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp')))]"
-      ]
-    },
-    {
-      "condition": "[equals(environment().name, 'AzureUSGovernment')]",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
-      "name": "[format('RoleAssignment_{0}_{1}', variables('ResourceGroup'), parameters('Timestamp'))]",
-      "resourceGroup": "[variables('ResourceGroup')]",
-      "properties": {
-        "expressionEvaluationOptions": {
-          "scope": "inner"
-        },
-        "mode": "Incremental",
-        "parameters": {
-          "PrincipalId": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp'))), '2022-09-01').outputs.userAssignedIdentityPrincipalId.value]"
-          },
-          "RoleDefinitionId": {
-            "value": "[resourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]"
-          }
-        },
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "metadata": {
-            "_generator": {
-              "name": "bicep",
-              "version": "0.16.1.55165",
-              "templateHash": "17109457504913498348"
-            }
-          },
-          "parameters": {
-            "PrincipalId": {
-              "type": "string"
-            },
-            "RoleDefinitionId": {
-              "type": "string"
-            },
-            "StorageAccountName": {
-              "type": "string",
-              "defaultValue": ""
-            }
-          },
-          "resources": [
-            {
-              "condition": "[not(empty(parameters('StorageAccountName')))]",
-              "type": "Microsoft.Authorization/roleAssignments",
-              "apiVersion": "2020-10-01-preview",
-              "scope": "[format('Microsoft.Storage/storageAccounts/{0}', parameters('StorageAccountName'))]",
-              "name": "[guid(parameters('PrincipalId'), parameters('RoleDefinitionId'), resourceGroup().id)]",
-              "properties": {
-                "roleDefinitionId": "[parameters('RoleDefinitionId')]",
-                "principalId": "[parameters('PrincipalId')]",
-                "principalType": "ServicePrincipal"
-              }
-            },
-            {
-              "condition": "[empty(parameters('StorageAccountName'))]",
-              "type": "Microsoft.Authorization/roleAssignments",
-              "apiVersion": "2020-10-01-preview",
-              "name": "[guid(parameters('PrincipalId'), parameters('RoleDefinitionId'), resourceGroup().id)]",
-              "properties": {
-                "roleDefinitionId": "[parameters('RoleDefinitionId')]",
-                "principalId": "[parameters('PrincipalId')]",
-                "principalType": "ServicePrincipal"
-              }
-            }
-          ]
-        }
-      },
-      "dependsOn": [
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('ResourceGroup'))]",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp')))]"
       ]
     },
@@ -773,8 +618,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.16.1.55165",
-              "templateHash": "13885133433360152494"
+              "version": "0.16.2.56959",
+              "templateHash": "10619740128088676391"
             }
           },
           "parameters": {
@@ -894,8 +739,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.16.1.55165",
-              "templateHash": "1428523563751944765"
+              "version": "0.16.2.56959",
+              "templateHash": "13932002706221793454"
             }
           },
           "parameters": {
@@ -956,7 +801,6 @@
       },
       "dependsOn": [
         "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('ResourceGroup'))]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('RoleAssignment_{0}_{1}', variables('ResourceGroup'), parameters('Timestamp')))]",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('StorageAccountResourceGroupName')), 'Microsoft.Resources/deployments', format('RoleAssignment_{0}_{1}', parameters('StorageAccountName'), parameters('Timestamp')))]",
         "roleAssignments",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp')))]"
@@ -1008,8 +852,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.16.1.55165",
-              "templateHash": "5569007281441531081"
+              "version": "0.16.2.56959",
+              "templateHash": "14119357655620373859"
             }
           },
           "parameters": {
@@ -1123,8 +967,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.16.1.55165",
-              "templateHash": "2406429073076814994"
+              "version": "0.16.2.56959",
+              "templateHash": "9659389488273709911"
             }
           },
           "parameters": {
@@ -1276,8 +1120,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.16.1.55165",
-              "templateHash": "9506901982397235975"
+              "version": "0.16.2.56959",
+              "templateHash": "1119692850695956474"
             }
           },
           "parameters": {
@@ -1463,474 +1307,9 @@
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('Office365_Configuration_{0}', parameters('Timestamp')))]",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('OneDrive_Configuration_{0}', parameters('Timestamp')))]",
         "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('ResourceGroup'))]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('RoleAssignment_{0}_{1}', variables('ResourceGroup'), parameters('Timestamp')))]",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('StorageAccountResourceGroupName')), 'Microsoft.Resources/deployments', format('RoleAssignment_{0}_{1}', parameters('StorageAccountName'), parameters('Timestamp')))]",
         "roleAssignments",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp')))]"
-      ]
-    },
-    {
-      "condition": "[parameters('EnableMonitoringAndAlerting')]",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
-      "name": "[format('Monitoring_{0}', parameters('Timestamp'))]",
-      "resourceGroup": "[variables('ResourceGroup')]",
-      "properties": {
-        "expressionEvaluationOptions": {
-          "scope": "inner"
-        },
-        "mode": "Incremental",
-        "parameters": {
-          "ActionGroupName": {
-            "value": "[variables('ActionGroupName')]"
-          },
-          "DeploymentScriptName": {
-            "value": "[variables('DeploymentScriptName')]"
-          },
-          "DistributionGroup": {
-            "value": "[parameters('DistributionGroup')]"
-          },
-          "Location": {
-            "value": "[parameters('Location')]"
-          },
-          "LogAnalyticsWorkspaceName": {
-            "value": "[variables('LogAnalyticsWorkspaceName')]"
-          },
-          "Tags": {
-            "value": "[parameters('Tags')]"
-          }
-        },
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "metadata": {
-            "_generator": {
-              "name": "bicep",
-              "version": "0.16.1.55165",
-              "templateHash": "11950115526465042262"
-            }
-          },
-          "parameters": {
-            "ActionGroupName": {
-              "type": "string"
-            },
-            "DeploymentScriptName": {
-              "type": "string"
-            },
-            "DistributionGroup": {
-              "type": "string"
-            },
-            "Location": {
-              "type": "string"
-            },
-            "LogAnalyticsWorkspaceName": {
-              "type": "string"
-            },
-            "Tags": {
-              "type": "object"
-            },
-            "Time": {
-              "type": "string",
-              "defaultValue": "[utcNow('yyyy-MM-dd-HH-mm-ss')]"
-            }
-          },
-          "variables": {
-            "Alerts": [
-              {
-                "name": "Azure Image Builder - Build Failure",
-                "description": "Sends an error alert when a build fails on an image template for Azure Image Builder.",
-                "severity": 0,
-                "evaluationFrequency": "PT5M",
-                "windowSize": "PT5M",
-                "criteria": {
-                  "allOf": [
-                    {
-                      "query": "AzureDiagnostics\n| where ResourceProvider == \"MICROSOFT.AUTOMATION\"\n| where Category  == \"JobStreams\"\n| where ResultDescription has \"Image Template build failed\"",
-                      "timeAggregation": "Count",
-                      "dimensions": [
-                        {
-                          "name": "ResultDescription",
-                          "operator": "Include",
-                          "values": [
-                            "*"
-                          ]
-                        }
-                      ],
-                      "operator": "GreaterThanOrEqual",
-                      "threshold": 1,
-                      "failingPeriods": {
-                        "numberOfEvaluationPeriods": 1,
-                        "minFailingPeriodsToAlert": 1
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "name": "Azure Image Builder - Build Success",
-                "description": "Sends an informational alert when a build succeeds on an image template for Azure Image Builder.",
-                "severity": 3,
-                "evaluationFrequency": "PT5M",
-                "windowSize": "PT5M",
-                "criteria": {
-                  "allOf": [
-                    {
-                      "query": "AzureDiagnostics\n| where ResourceProvider == \"MICROSOFT.AUTOMATION\"\n| where Category  == \"JobStreams\"\n| where ResultDescription has \"Image Template build succeeded\"",
-                      "timeAggregation": "Count",
-                      "dimensions": [
-                        {
-                          "name": "ResultDescription",
-                          "operator": "Include",
-                          "values": [
-                            "*"
-                          ]
-                        }
-                      ],
-                      "operator": "GreaterThanOrEqual",
-                      "threshold": 1,
-                      "failingPeriods": {
-                        "numberOfEvaluationPeriods": 1,
-                        "minFailingPeriodsToAlert": 1
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          "resources": [
-            {
-              "type": "Microsoft.OperationalInsights/workspaces",
-              "apiVersion": "2021-06-01",
-              "name": "[parameters('LogAnalyticsWorkspaceName')]",
-              "location": "[parameters('Location')]",
-              "tags": "[parameters('Tags')]",
-              "properties": {
-                "sku": {
-                  "name": "PerGB2018"
-                },
-                "retentionInDays": 30,
-                "workspaceCapping": {
-                  "dailyQuotaGb": -1
-                },
-                "publicNetworkAccessForIngestion": "Enabled",
-                "publicNetworkAccessForQuery": "Enabled"
-              }
-            },
-            {
-              "type": "Microsoft.Insights/actionGroups",
-              "apiVersion": "2022-06-01",
-              "name": "[parameters('ActionGroupName')]",
-              "location": "global",
-              "tags": "[parameters('Tags')]",
-              "properties": {
-                "emailReceivers": [
-                  {
-                    "emailAddress": "[parameters('DistributionGroup')]",
-                    "name": "[parameters('DistributionGroup')]",
-                    "useCommonAlertSchema": true
-                  }
-                ],
-                "enabled": true,
-                "groupShortName": "AIB Builds"
-              }
-            },
-            {
-              "type": "Microsoft.Resources/deploymentScripts",
-              "apiVersion": "2020-10-01",
-              "name": "[parameters('DeploymentScriptName')]",
-              "location": "[parameters('Location')]",
-              "tags": "[parameters('Tags')]",
-              "kind": "AzurePowerShell",
-              "properties": {
-                "azPowerShellVersion": "6.2",
-                "scriptContent": "    Write-Host \"Start\"\r\n    Get-Date\r\n    Start-Sleep -Seconds 120\r\n    Write-Host \"Stop\"\r\n    Get-Date\r\n    ",
-                "cleanupPreference": "Always",
-                "forceUpdateTag": "[parameters('Time')]",
-                "retentionInterval": "P1D",
-                "timeout": "PT10M"
-              }
-            },
-            {
-              "copy": {
-                "name": "scheduledQueryRules",
-                "count": "[length(range(0, length(variables('Alerts'))))]"
-              },
-              "type": "Microsoft.Insights/scheduledQueryRules",
-              "apiVersion": "2022-06-15",
-              "name": "[variables('Alerts')[range(0, length(variables('Alerts')))[copyIndex()]].name]",
-              "location": "[parameters('Location')]",
-              "tags": "[parameters('Tags')]",
-              "kind": "LogAlert",
-              "properties": {
-                "actions": {
-                  "actionGroups": [
-                    "[resourceId('Microsoft.Insights/actionGroups', parameters('ActionGroupName'))]"
-                  ]
-                },
-                "autoMitigate": false,
-                "skipQueryValidation": false,
-                "criteria": "[variables('Alerts')[range(0, length(variables('Alerts')))[copyIndex()]].criteria]",
-                "description": "[variables('Alerts')[range(0, length(variables('Alerts')))[copyIndex()]].description]",
-                "displayName": "[variables('Alerts')[range(0, length(variables('Alerts')))[copyIndex()]].name]",
-                "enabled": true,
-                "evaluationFrequency": "[variables('Alerts')[range(0, length(variables('Alerts')))[copyIndex()]].evaluationFrequency]",
-                "severity": "[variables('Alerts')[range(0, length(variables('Alerts')))[copyIndex()]].severity]",
-                "windowSize": "[variables('Alerts')[range(0, length(variables('Alerts')))[copyIndex()]].windowSize]",
-                "scopes": [
-                  "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('LogAnalyticsWorkspaceName'))]"
-                ]
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Insights/actionGroups', parameters('ActionGroupName'))]",
-                "[resourceId('Microsoft.Resources/deploymentScripts', parameters('DeploymentScriptName'))]",
-                "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('LogAnalyticsWorkspaceName'))]"
-              ]
-            }
-          ],
-          "outputs": {
-            "LogAnalyticsWorkspaceResourceId": {
-              "type": "string",
-              "value": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('LogAnalyticsWorkspaceName'))]"
-            }
-          }
-        }
-      },
-      "dependsOn": [
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('ResourceGroup'))]"
-      ]
-    },
-    {
-      "condition": "[parameters('EnableBuildAutomation')]",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
-      "name": "[format('AutomationAccount_{0}', parameters('Timestamp'))]",
-      "resourceGroup": "[variables('ResourceGroup')]",
-      "properties": {
-        "expressionEvaluationOptions": {
-          "scope": "inner"
-        },
-        "mode": "Incremental",
-        "parameters": {
-          "AutomationAccountName": {
-            "value": "[variables('AutomationAccountName')]"
-          },
-          "ImageOffer": {
-            "value": "[parameters('ImageOffer')]"
-          },
-          "ImagePublisher": {
-            "value": "[parameters('ImagePublisher')]"
-          },
-          "ImageSku": {
-            "value": "[parameters('ImageSku')]"
-          },
-          "ImageTemplateName": {
-            "value": "[variables('ImageTemplateName')]"
-          },
-          "Location": {
-            "value": "[parameters('Location')]"
-          },
-          "LogAnalyticsWorkspaceResourceId": "[if(parameters('EnableMonitoringAndAlerting'), createObject('value', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('Monitoring_{0}', parameters('Timestamp'))), '2022-09-01').outputs.LogAnalyticsWorkspaceResourceId.value), createObject('value', ''))]",
-          "TimeZone": {
-            "value": "[variables('TimeZone')]"
-          }
-        },
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "metadata": {
-            "_generator": {
-              "name": "bicep",
-              "version": "0.16.1.55165",
-              "templateHash": "8241329994525746051"
-            }
-          },
-          "parameters": {
-            "AutomationAccountName": {
-              "type": "string"
-            },
-            "ImageOffer": {
-              "type": "string"
-            },
-            "ImagePublisher": {
-              "type": "string"
-            },
-            "ImageSku": {
-              "type": "string"
-            },
-            "ImageTemplateName": {
-              "type": "string"
-            },
-            "JobScheduleName": {
-              "type": "string",
-              "defaultValue": "[newGuid()]"
-            },
-            "Location": {
-              "type": "string"
-            },
-            "LogAnalyticsWorkspaceResourceId": {
-              "type": "string"
-            },
-            "Time": {
-              "type": "string",
-              "defaultValue": "[utcNow()]",
-              "metadata": {
-                "description": "ISO 8601 timestamp used to help determine the webhook expiration date.  The webhook is hardcoded to expire 5 years after the timestamp."
-              }
-            },
-            "TimeZone": {
-              "type": "string"
-            }
-          },
-          "variables": {
-            "EnvironmentName": "[environment().name]",
-            "ImageTemplateResourceGroupName": "[resourceGroup().name]",
-            "Modules": [
-              {
-                "name": "Az.Accounts",
-                "uri": "https://www.powershellgallery.com/api/v2/package/Az.Accounts"
-              },
-              {
-                "name": "Az.ImageBuilder",
-                "uri": "https://www.powershellgallery.com/api/v2/package/Az.ImageBuilder"
-              }
-            ],
-            "Runbook": "AIB-BuildAutomation",
-            "SubscriptionId": "[subscription().subscriptionId]",
-            "TenantId": "[subscription().tenantId]"
-          },
-          "resources": [
-            {
-              "type": "Microsoft.Automation/automationAccounts",
-              "apiVersion": "2021-06-22",
-              "name": "[parameters('AutomationAccountName')]",
-              "location": "[parameters('Location')]",
-              "identity": {
-                "type": "SystemAssigned"
-              },
-              "properties": {
-                "sku": {
-                  "name": "Free"
-                }
-              }
-            },
-            {
-              "copy": {
-                "name": "modules",
-                "count": "[length(variables('Modules'))]",
-                "mode": "serial",
-                "batchSize": 1
-              },
-              "type": "Microsoft.Automation/automationAccounts/modules",
-              "apiVersion": "2019-06-01",
-              "name": "[format('{0}/{1}', parameters('AutomationAccountName'), variables('Modules')[copyIndex()].name)]",
-              "location": "[parameters('Location')]",
-              "properties": {
-                "contentLink": {
-                  "uri": "[variables('Modules')[copyIndex()].uri]"
-                }
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', parameters('AutomationAccountName'))]"
-              ]
-            },
-            {
-              "type": "Microsoft.Automation/automationAccounts/runbooks",
-              "apiVersion": "2019-06-01",
-              "name": "[format('{0}/{1}', parameters('AutomationAccountName'), variables('Runbook'))]",
-              "location": "[parameters('Location')]",
-              "properties": {
-                "runbookType": "PowerShell",
-                "logProgress": false,
-                "logVerbose": false,
-                "publishContentLink": {
-                  "uri": "https://raw.githubusercontent.com/jamasten/Azure/main/solutions/imageBuilder/scripts/New-AzureImageBuilderBuild.ps1",
-                  "version": "1.0.0.0"
-                }
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', parameters('AutomationAccountName'))]",
-                "modules"
-              ]
-            },
-            {
-              "type": "Microsoft.Automation/automationAccounts/schedules",
-              "apiVersion": "2022-08-08",
-              "name": "[format('{0}/{1}', parameters('AutomationAccountName'), parameters('ImageTemplateName'))]",
-              "properties": {
-                "frequency": "Day",
-                "interval": 1,
-                "startTime": "[dateTimeAdd(parameters('Time'), 'PT15M')]",
-                "timeZone": "[parameters('TimeZone')]"
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', parameters('AutomationAccountName'))]"
-              ]
-            },
-            {
-              "type": "Microsoft.Automation/automationAccounts/jobSchedules",
-              "apiVersion": "2022-08-08",
-              "name": "[format('{0}/{1}', parameters('AutomationAccountName'), parameters('JobScheduleName'))]",
-              "properties": {
-                "parameters": {
-                  "EnvironmentName": "[variables('EnvironmentName')]",
-                  "ImagePublisher": "[parameters('ImagePublisher')]",
-                  "ImageOffer": "[parameters('ImageOffer')]",
-                  "ImageSku": "[parameters('ImageSku')]",
-                  "Location": "[parameters('Location')]",
-                  "SubscriptionId": "[variables('SubscriptionId')]",
-                  "TemplateName": "[parameters('ImageTemplateName')]",
-                  "TemplateResourceGroupName": "[variables('ImageTemplateResourceGroupName')]",
-                  "TenantId": "[variables('TenantId')]"
-                },
-                "runbook": {
-                  "name": "[variables('Runbook')]"
-                },
-                "schedule": {
-                  "name": "[parameters('ImageTemplateName')]"
-                }
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', parameters('AutomationAccountName'))]",
-                "[resourceId('Microsoft.Automation/automationAccounts/runbooks', parameters('AutomationAccountName'), variables('Runbook'))]",
-                "[resourceId('Microsoft.Automation/automationAccounts/schedules', parameters('AutomationAccountName'), parameters('ImageTemplateName'))]"
-              ]
-            },
-            {
-              "condition": "[not(empty(parameters('LogAnalyticsWorkspaceResourceId')))]",
-              "type": "Microsoft.Insights/diagnosticSettings",
-              "apiVersion": "2017-05-01-preview",
-              "scope": "[format('Microsoft.Automation/automationAccounts/{0}', parameters('AutomationAccountName'))]",
-              "name": "[format('diag-{0}', parameters('AutomationAccountName'))]",
-              "properties": {
-                "logs": [
-                  {
-                    "category": "JobLogs",
-                    "enabled": true
-                  },
-                  {
-                    "category": "JobStreams",
-                    "enabled": true
-                  }
-                ],
-                "workspaceId": "[parameters('LogAnalyticsWorkspaceResourceId')]"
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', parameters('AutomationAccountName'))]"
-              ]
-            }
-          ],
-          "outputs": {
-            "principalId": {
-              "type": "string",
-              "value": "[reference(resourceId('Microsoft.Automation/automationAccounts', parameters('AutomationAccountName')), '2021-06-22', 'full').identity.principalId]"
-            }
-          }
-        }
-      },
-      "dependsOn": [
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('Monitoring_{0}', parameters('Timestamp')))]",
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('ResourceGroup'))]"
       ]
     },
     {
@@ -1959,8 +1338,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.16.1.55165",
-              "templateHash": "15640702056699212860"
+              "version": "0.16.2.56959",
+              "templateHash": "13519623963697872240"
             }
           },
           "parameters": {

@@ -22,15 +22,6 @@ param DeployVirtualDesktopOptimizationTool bool = true
 @description('Determine whether you want to install Microsoft Visio in the image.')
 param DeployVisio bool = true
 
-@description('The distribution group that will recieve email alerts when an AIB image build either succeeds or fails.')
-param DistributionGroup string
-
-@description('Determine whether you want to enable build automation.  This feature will check daily if a new marketplace image exists and will initiate a build if the image date is newer than the last build date.')
-param EnableBuildAutomation bool = true
-
-@description('Determine whether you want to enable monitoring and alerting for the AIB image builds.')
-param EnableMonitoringAndAlerting bool = true
-
 @allowed([
   'd' // Development
   'p' // Production
@@ -106,8 +97,6 @@ param VirtualNetworkName string = 'vnet-net-d-eu'
 param VirtualNetworkResourceGroupName string = 'rg-net-d-eu'
 
 
-var ActionGroupName = 'ag-${NamingStandard}'
-var AutomationAccountName = 'aa-${NamingStandard}'
 var DeploymentScriptName = 'ds-${NamingStandard}'
 var ImageTemplateName = 'it-${toLower(ImageDefinitionName)}-${Environment}-${LocationShortName}'
 var LocationShortName = LocationShortNames[Location]
@@ -166,11 +155,9 @@ var LocationShortNames = {
   westus2: 'wu2'
   westus3: 'wu3'
 }
-var LogAnalyticsWorkspaceName = 'law-${NamingStandard}'
 var NamingStandard = 'aib-${Environment}-${LocationShortName}'
 var ResourceGroup = 'rg-${NamingStandard}'
-var Roles = union(Roles_Default, Role_AzureCloud)
-var Roles_Default = [
+var Roles = [
   {
     resourceGroup: VirtualNetworkResourceGroupName
     name: 'Virtual Network Join'
@@ -221,85 +208,8 @@ var Roles_Default = [
     ]
   }
 ]
-var Role_AzureCloud = environment().name == 'AzureCloud' ? [
-  {
-    resourceGroup: ResourceGroup
-    name: 'Image Template Build Automation'
-    description: 'Allow Image Template build automation using a Managed Identity on an Automation Account.'
-    permissions: [
-      {
-        actions: [
-          'Microsoft.VirtualMachineImages/imageTemplates/run/action'
-          'Microsoft.VirtualMachineImages/imageTemplates/read'
-          'Microsoft.Compute/locations/publishers/artifacttypes/offers/skus/versions/read'
-          'Microsoft.Compute/locations/publishers/artifacttypes/offers/skus/read'
-          'Microsoft.Compute/locations/publishers/artifacttypes/offers/read'
-          'Microsoft.Compute/locations/publishers/read'
-        ]
-      }
-    ]
-  }
-] : []
 var StagingResourceGroupName = 'rg-aib-${Environment}-${LocationShortName}-staging-${toLower(ImageDefinitionName)}'
 var StorageUri = 'https://${StorageAccountName}.blob.${environment().suffixes.storage}/${StorageContainerName}/'
-var TimeZone = TimeZones[Location]
-var TimeZones = {
-  australiacentral: 'AUS Eastern Standard Time'
-  australiacentral2: 'AUS Eastern Standard Time'
-  australiaeast: 'AUS Eastern Standard Time'
-  australiasoutheast: 'AUS Eastern Standard Time'
-  brazilsouth: 'E. South America Standard Time'
-  brazilsoutheast: 'E. South America Standard Time'
-  canadacentral: 'Eastern Standard Time'
-  canadaeast: 'Eastern Standard Time'
-  centralindia: 'India Standard Time'
-  centralus: 'Central Standard Time'
-  chinaeast: 'China Standard Time'
-  chinaeast2: 'China Standard Time'
-  chinanorth: 'China Standard Time'
-  chinanorth2: 'China Standard Time'
-  eastasia: 'China Standard Time'
-  eastus: 'Eastern Standard Time'
-  eastus2: 'Eastern Standard Time'
-  francecentral: 'Central Europe Standard Time'
-  francesouth: 'Central Europe Standard Time'
-  germanynorth: 'Central Europe Standard Time'
-  germanywestcentral: 'Central Europe Standard Time'
-  japaneast: 'Tokyo Standard Time'
-  japanwest: 'Tokyo Standard Time'
-  jioindiacentral: 'India Standard Time'
-  jioindiawest: 'India Standard Time'
-  koreacentral: 'Korea Standard Time'
-  koreasouth: 'Korea Standard Time'
-  northcentralus: 'Central Standard Time'
-  northeurope: 'GMT Standard Time'
-  norwayeast: 'Central Europe Standard Time'
-  norwaywest: 'Central Europe Standard Time'
-  southafricanorth: 'South Africa Standard Time'
-  southafricawest: 'South Africa Standard Time'
-  southcentralus: 'Central Standard Time'
-  southindia: 'India Standard Time'
-  southeastasia: 'Singapore Standard Time'
-  swedencentral: 'Central Europe Standard Time'
-  switzerlandnorth: 'Central Europe Standard Time'
-  switzerlandwest: 'Central Europe Standard Time'
-  uaecentral: 'Arabian Standard Time'
-  uaenorth: 'Arabian Standard Time'
-  uksouth: 'GMT Standard Time'
-  ukwest: 'GMT Standard Time'
-  usdodcentral: 'Central Standard Time'
-  usdodeast: 'Eastern Standard Time'
-  usgovarizona: 'Mountain Standard Time'
-  usgoviowa: 'Central Standard Time'
-  usgovtexas: 'Central Standard Time'
-  usgovvirginia: 'Eastern Standard Time'
-  westcentralus: 'Mountain Standard Time'
-  westeurope: 'Central Europe Standard Time'
-  westindia: 'India Standard Time'
-  westus: 'Pacific Standard Time'
-  westus2: 'Pacific Standard Time'
-  westus3: 'Mountain Standard Time'
-}
 
 
 resource rg 'Microsoft.Resources/resourceGroups@2019-10-01' = {
@@ -337,7 +247,7 @@ module roleAssignments 'modules/roleAssignments.bicep' = [for i in range(0, leng
   name: 'RoleAssignments_${i}_${Timestamp}'
   scope: resourceGroup(Roles[i].resourceGroup)
   params: {
-    PrincipalId: Roles[i].name == 'Image Template Build Automation' ? automationAccount.outputs.principalId : userAssignedIdentity.outputs.userAssignedIdentityPrincipalId
+    PrincipalId: userAssignedIdentity.outputs.userAssignedIdentityPrincipalId
     RoleDefinitionId: roleDefinitions[i].id
   }
 }]
@@ -349,16 +259,6 @@ module roleAssignment_Storage 'modules/roleAssignments.bicep' = {
     PrincipalId: userAssignedIdentity.outputs.userAssignedIdentityPrincipalId
     RoleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1') // Storage Blob Data Reader
     StorageAccountName: StorageAccountName
-  }
-}
-
-// Azure US Government requires the Contributor role for the build automation identity until permissions for Microsoft.VirtualMachineImages are supported
-module roleAssignment_AzureUSGovernment 'modules/roleAssignments.bicep' = if(environment().name == 'AzureUSGovernment') {
-  name: 'RoleAssignment_${rg.name}_${Timestamp}'
-  scope: rg
-  params: {
-    PrincipalId: userAssignedIdentity.outputs.userAssignedIdentityPrincipalId
-    RoleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c') // Contributor
   }
 }
 
@@ -393,7 +293,6 @@ module networkPolicy 'modules/networkPolicy.bicep' = if(!(empty(SubnetName)) && 
     VirtualNetworkResourceGroupName: VirtualNetworkResourceGroupName
   }
   dependsOn: [
-    roleAssignment_AzureUSGovernment
     roleAssignment_Storage
     roleAssignments
   ]
@@ -461,38 +360,9 @@ module imageTemplate 'modules/imageTemplate.bicep' = {
     networkPolicy
     office365
     oneDrive
-    roleAssignment_AzureUSGovernment
     roleAssignment_Storage
     roleAssignments
   ]
-}
-
-module monitoring 'modules/monitoring.bicep' = if(EnableMonitoringAndAlerting) {
-  name: 'Monitoring_${Timestamp}'
-  scope: rg
-  params: {
-    ActionGroupName: ActionGroupName
-    DeploymentScriptName: DeploymentScriptName
-    DistributionGroup: DistributionGroup
-    Location: Location
-    LogAnalyticsWorkspaceName: LogAnalyticsWorkspaceName
-    Tags: Tags
-  }
-}
-
-module automationAccount 'modules/buildAutomation.bicep' = if(EnableBuildAutomation) {
-  name: 'AutomationAccount_${Timestamp}'
-  scope: rg
-  params: {
-    AutomationAccountName: AutomationAccountName
-    ImageOffer: ImageOffer
-    ImagePublisher: ImagePublisher
-    ImageSku: ImageSku
-    ImageTemplateName: ImageTemplateName
-    Location: Location
-    LogAnalyticsWorkspaceResourceId: EnableMonitoringAndAlerting ? monitoring.outputs.LogAnalyticsWorkspaceResourceId : ''
-    TimeZone: TimeZone
-  }
 }
 
 module policyExemptions 'modules/exemption.bicep' = [for i in range(0, length(ExemptPolicyAssignmentIds)): if(length(ExemptPolicyAssignmentIds) > 0) {
