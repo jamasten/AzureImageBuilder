@@ -176,6 +176,14 @@ var OneDriveType = ImageSku == 'office-365' ? [
   }
 ]
 var OneDrive = DeployOneDrive ? OneDriveType : []
+var Sysprep =  [
+  {
+    type: 'File'
+    name: 'Download custom Sysprep script'
+    sourceUri: 'https://raw.githubusercontent.com/jamasten/AzureImageBuilder/main/scripts/DeprovisioningScript.ps1'
+    destination: 'C:\\DeprovisioningScript.ps1'
+  }
+]
 var Teams = DeployTeams ? [
   {
     type: 'PowerShell'
@@ -239,7 +247,7 @@ var WindowsUpdate = [
     restartTimeout: '5m'
   }
 ]
-var Customizers = union(CreateTempDir, VDOT, Functions, FSLogix, Office, OneDrive, Teams, RemoveTempDir, WindowsUpdate)
+var Customizers = union(CreateTempDir, VDOT, Functions, FSLogix, Office, OneDrive, Teams, RemoveTempDir, WindowsUpdate, Sysprep)
 
 
 resource imageTemplate 'Microsoft.VirtualMachineImages/imageTemplates@2022-02-14' = {
