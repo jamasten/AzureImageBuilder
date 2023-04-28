@@ -1,4 +1,3 @@
-param ContainerUri string
 param Environment string
 param Location string
 param LocationShortName string
@@ -22,12 +21,12 @@ resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
     }
   }
   properties: {
+    arguments: '-Subnet ${SubnetName} -VirtualNetwork ${VirtualNetworkName} -ResourceGroup ${VirtualNetworkResourceGroupName}'
+    azPowerShellVersion: '9.4'
+    cleanupPreference: 'Always'
     forceUpdateTag: Timestamp
-    azPowerShellVersion: '5.4'
-    arguments: '-SubnetName ${SubnetName} -VirtualNetworkName ${VirtualNetworkName} -VirtualNetworkResourceGroupName ${VirtualNetworkResourceGroupName}'
-    primaryScriptUri: '${ContainerUri}Disable-AzurePrivateLinkServiceNetworkPolicy.ps1'
-    timeout: 'PT2H'
-    cleanupPreference: 'OnSuccess'
-    retentionInterval: 'P1D'
+    retentionInterval: 'PT2H'
+    scriptContent: '$VNET = Get-AzVirtualNetwork -Name $VirtualNetwork -ResourceGroupName $ResourceGroup; ($VNET | Select-Object -ExpandProperty "Subnets" | Where-Object {$_.Name -eq $Subnet}).privateLinkServiceNetworkPolicies = "Disabled"; $VNET | Set-AzVirtualNetwork'
+    timeout: 'PT30M'
   }
 }
