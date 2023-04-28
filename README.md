@@ -38,6 +38,21 @@ The following resources are deployed with this solution:
 
 - Virtual Network (Required): ensure a virtual network has been deployed and the target subnet has an assigned Network Security Group with the required rule configured: [PowerShell for NSG Rule](https://learn.microsoft.com/azure/virtual-machines/windows/image-builder-vnet#add-an-nsg-rule)
 
+## Considerations
+
+If you plan to store your AIB customizer assets on an Azure storage account with either service or private endpoints, and not allow anonymous access to the Azure Blobs container, there are extra steps you must perform for a successful build. First, the user assigned identity must be added as an identity on the build VM. That is already configured in this solution. Second, the user assigned identity must be assigned the Storage Blob Data Reader role on the container. Lastly, the following code snippet should be used with a PowerShell inline command customizer to properly access and authorize the downloads of your assets from the container.
+
+```powershell
+$UserAssignedIdentityObjectId = '<object / principal ID for user assigned identity>'
+$StorageAccountName = '<storage account name>'
+$ContainerName = '<container name>'
+$BlobName = '<blob name>'
+$StorageAccountUrl = 'https://' + $StorageAccountName + '.blob.core.windows.net'
+$TokenUri = "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=$StorageAccountUrl/&object_id=$UserAssignedIdentityObjectId"
+$AccessToken = ((Invoke-WebRequest -Headers @{Metadata=$true} -Uri $TokenUri -UseBasicParsing).Content | ConvertFrom-Json).access_token
+Invoke-WebRequest -Headers @{"x-ms-version"="2017-11-09"; Authorization ="Bearer $AccessToken"} -Uri "$StorageAccountUrl/$ContainerName/$BlobName" -OutFile "C:\temp\$BlobName"
+```
+
 ## Deployment Options
 
 To deploy this solution, the principal must have Owner privileges on the Azure subscription.
