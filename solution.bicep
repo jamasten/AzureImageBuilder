@@ -174,7 +174,7 @@ var O365AddProject = InstallProject ? '<Product ID="ProjectProRetail"><Language 
 var O365AddVisio = InstallVisio ? '<Product ID="VisioProRetail"><Language ID="en-us" /></Product>' : ''
 var O365ConfigFooter = '</Add><Updates Enabled="FALSE" /><Display Level="None" AcceptEULA="TRUE" /><Property Name="FORCEAPPSHUTDOWN" Value="TRUE"/><Property Name="SharedComputerLicensing" Value="1"/></Configuration>'
 var O365Content = '${O365ConfigHeader}${O365AddOffice}${O365AddProject}${O365AddVisio}${O365ConfigFooter}'
-var PrivateDnsZoneName = 'privatelink.file.${StorageSuffix}'
+var PrivateDnsZoneName = 'privatelink.blob.${StorageSuffix}'
 var ResourceGroup = 'rg-${NamingStandard}'
 var Roles = [
   {
@@ -255,16 +255,20 @@ module roleAssignments 'modules/roleAssignments.bicep' = [for i in range(0, leng
   }
 }]
 
-module storageAccount 'modules/storageAccout.bicep' = {
+module storageAccount 'modules/storageAccount.bicep' = {
   scope: rg
   name: 'StorageAccount_${Timestamp}'
   params: {
+    Assets: Assets
+    ContainerName: ContainerName
+    DeploymentScriptName: DeploymentScriptName
     Location: Location
     PrivateDnsZoneName: PrivateDnsZoneName
     StorageAccountName: StorageAccountName
     StorageEndpoint: StorageEndpoint
     SubnetName: SubnetName
     Tags: Tags
+    Timestamp: Timestamp
     UserAssignedIdentityPrincipalId: userAssignedIdentity.outputs.PrincipalId
     VirtualNetworkName: VirtualNetworkName
     VirtualNetworkResourceGroupName: VirtualNetworkResourceGroupName
@@ -291,7 +295,6 @@ module networkPolicy 'modules/networkPolicy.bicep' = if (!(empty(SubnetName)) &&
   name: 'NetworkPolicy_${Timestamp}'
   scope: rg
   params: {
-    ContainerUri: ContainerUri
     Environment: Environment
     Location: Location
     LocationShortName: LocationShortName
@@ -306,20 +309,6 @@ module networkPolicy 'modules/networkPolicy.bicep' = if (!(empty(SubnetName)) &&
     roleAssignments
   ]
 }
-
-module uploadBlobs 'modules/deploymentScript.bicep' = [for i in range(0, length(Assets)): {
-  scope: rg
-  name: 'DeploymentScript_UploadBlob_${i}_${Timestamp}'
-  params: {
-    ContainerName: ContainerName
-    Content: Assets[i].content
-    DeploymentScriptName: '${DeploymentScriptName}-uploadBlob-${replace(Assets[i].fileName, '.ps1', '')}'
-    FileName: Assets[i].fileName
-    Location: Location
-    StorageAccountName: StorageAccountName
-    Tags: Tags
-  }
-}]
 
 module imageTemplate 'modules/imageTemplate.bicep' = {
   name: 'ImageTemplate_${Timestamp}'
@@ -353,7 +342,7 @@ module imageTemplate 'modules/imageTemplate.bicep' = {
   dependsOn: [
     networkPolicy
     roleAssignments
-    uploadBlobs
+    storageAccount
   ]
 }
 
