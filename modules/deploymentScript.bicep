@@ -1,21 +1,17 @@
+param ContainerName string
+param Content string
 param DeploymentScriptName string
+param FileName string
 param Location string
 param StorageAccountName string
-param StorageAccountResourceGroupName string
-param StorageContainerName string
 param Tags object
-
-
-var FileName = 'tenantId.txt'
-
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2021-01-01' existing = {
   name: StorageAccountName
-  scope: resourceGroup(StorageAccountResourceGroupName)
 }
 
 resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
-  name: '${DeploymentScriptName}-onedrive'
+  name: DeploymentScriptName
   location: Location
   tags: Tags
   kind: 'AzureCLI'
@@ -34,9 +30,9 @@ resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
       }
       {
         name: 'CONTENT'
-        value: subscription().tenantId
+        value: Content
       }
     ]
-    scriptContent: 'echo "$CONTENT" > ${FileName} && az storage blob upload -f ${FileName} -c ${StorageContainerName} -n ${FileName}'
+    scriptContent: 'echo "$CONTENT" > ${FileName} && az storage blob upload -f ${FileName} -c ${ContainerName} -n ${FileName}'
   }
 }
