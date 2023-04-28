@@ -74,7 +74,7 @@ param Location string = deployment().location
   'PublicEndpoint'
   'ServiceEndpoint'
 ])
-@description('')
+@description('Determine the type of endpoint to enable on the storage account. DNS forwarding should already be configured if choosing a private endpoint.')
 param StorageEndpoint string
 
 @description('The subnet name for the custom virtual network.')

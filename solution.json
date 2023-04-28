@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.16.2.56959",
-      "templateHash": "6306283119503465437"
+      "templateHash": "15139530043979303611"
     }
   },
   "parameters": {
@@ -149,7 +149,7 @@
     "StorageEndpoint": {
       "type": "string",
       "metadata": {
-        "description": ""
+        "description": "Determine the type of endpoint to enable on the storage account. DNS forwarding should already be configured if choosing a private endpoint."
       },
       "allowedValues": [
         "PrivateEndpoint",
