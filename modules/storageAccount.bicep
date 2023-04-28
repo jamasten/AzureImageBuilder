@@ -1,9 +1,13 @@
+param Assets array
+param ContainerName string
+param DeploymentScriptName string
 param Location string
 param PrivateDnsZoneName string
 param StorageAccountName string
 param StorageEndpoint string
 param SubnetName string
 param Tags object
+param Timestamp string
 param UserAssignedIdentityPrincipalId string
 param VirtualNetworkName string
 param VirtualNetworkResourceGroupName string
@@ -68,6 +72,19 @@ resource container 'Microsoft.Storage/storageAccounts/blobServices/containers@20
   }
 }
 
+module uploadBlobs 'deploymentScript.bicep' = [for i in range(0, length(Assets)): {
+  name: 'DeploymentScript_UploadBlob_${i}_${Timestamp}'
+  params: {
+    ContainerName: ContainerName
+    Content: Assets[i].content
+    DeploymentScriptName: '${DeploymentScriptName}-uploadBlob-${replace(Assets[i].fileName, '.ps1', '')}'
+    FileName: Assets[i].fileName
+    Location: Location
+    StorageAccountName: StorageAccountName
+    Tags: Tags
+  }
+}]
+
 // Assigns the Storage Blob Data Reader role to the User Assigned Identity on the Azure Blobs container so the build VM can access the assets
 resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: container
@@ -99,7 +116,7 @@ resource privateEndpoint 'Microsoft.Network/privateEndpoints@2020-05-01' = {
         properties: {
           privateLinkServiceId: storageAccount.id
           groupIds: [
-            'file'
+            'blob'
           ]
         }
       }
