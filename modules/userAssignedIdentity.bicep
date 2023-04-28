@@ -11,5 +11,5 @@ resource userAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@
 }
 
 
-output userAssignedIdentityPrincipalId string = userAssignedIdentity.properties.principalId
-output userAssignedIdentityResourceId string = userAssignedIdentity.id
+output PrincipalId string = userAssignedIdentity.properties.principalId
+output ResourceId string = userAssignedIdentity.id
