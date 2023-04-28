@@ -1,27 +1,5 @@
 targetScope = 'subscription'
 
-
-@description('Determine whether you want to install FSLogix in the image.')
-param DeployFSLogix bool = true
-
-@description('Determine whether you want to install Microsoft Office 365 in the image.')
-param DeployOffice bool = true
-
-@description('Determine whether you want to install Microsoft One Drive in the image.')
-param DeployOneDrive bool = true
-
-@description('Determine whether you want to install Microsoft Project in the image.')
-param DeployProject bool = true
-
-@description('Determine whether you want to install Microsoft Teams in the image.')
-param DeployTeams bool = true
-
-@description('Determine whether you want to run the Virtual Desktop Optimization Tool on the image. https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool')
-param DeployVirtualDesktopOptimizationTool bool = true
-
-@description('Determine whether you want to install Microsoft Visio in the image.')
-param DeployVisio bool = true
-
 @allowed([
   'd' // Development
   'p' // Production
@@ -67,17 +45,37 @@ param ImageVersion string = 'latest'
 ])
 param ImageStorageAccountType string = 'Standard_LRS'
 
+@description('Determine whether you want to install FSLogix in the image.')
+param InstallFSLogix bool = true
+
+@description('Determine whether you want to install Microsoft Office 365 in the image.')
+param InstallOffice bool = true
+
+@description('Determine whether you want to install Microsoft One Drive in the image.')
+param InstallOneDrive bool = true
+
+@description('Determine whether you want to install Microsoft Project in the image.')
+param InstallProject bool = true
+
+@description('Determine whether you want to install Microsoft Teams in the image.')
+param InstallTeams bool = true
+
+@description('Determine whether you want to run the Virtual Desktop Optimization Tool on the image. https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool')
+param InstallVirtualDesktopOptimizationTool bool = true
+
+@description('Determine whether you want to install Microsoft Visio in the image.')
+param InstallVisio bool = true
+
 @description('The location for the resources deployed in this solution.')
 param Location string = deployment().location
 
-@description('The name for the storage account containing the scripts & application installers.')
-param StorageAccountName string = 'sacoredeu'
-
-@description('The resource group name for the storage account containing the scripts & application installers.')
-param StorageAccountResourceGroupName string = 'rg-core-d-eu'
-
-@description('The name of the container in the storage account containing the scripts & application installers.')
-param StorageContainerName string = 'artifacts'
+@allowed([
+  'PrivateEndpoint'
+  'PublicEndpoint'
+  'ServiceEndpoint'
+])
+@description('')
+param StorageEndpoint string
 
 @description('The subnet name for the custom virtual network.')
 param SubnetName string = 'Clients'
@@ -96,12 +94,87 @@ param VirtualNetworkName string = 'vnet-net-d-eu'
 @description('The resource group name for the custom virtual network.')
 param VirtualNetworkResourceGroupName string = 'rg-net-d-eu'
 
-
+var Assets = [
+  {
+    content: O365Content
+    fileName: O365FileName
+  }
+  {
+    content: subscription().tenantId
+    fileName: 'tenantId.txt'
+  }
+  {
+    content: loadTextContent('artifacts/Add-FSLogix.ps1')
+    fileName: 'Add-FSLogix.ps1'
+  }
+  {
+    content: loadTextContent('artifacts/Add-O365.ps1')
+    fileName: 'Add-O365.ps1'
+  }
+  {
+    content: loadTextContent('artifacts/Add-OneDrive.ps1')
+    fileName: 'Add-OneDrive.ps1'
+  }
+  {
+    content: loadTextContent('artifacts/Add-Teams.ps1')
+    fileName: 'Add-Teams.ps1'
+  }
+  {
+    content: loadTextContent('artifacts/DeprovisioningScript.ps1')
+    fileName: 'DeprovisioningScript.ps1'
+  }
+  {
+    content: loadTextContent('artifacts/Get-FSLogix.ps1')
+    fileName: 'Get-FSLogix.ps1'
+  }
+  {
+    content: loadTextContent('artifacts/Get-O365.ps1')
+    fileName: 'Get-O365.ps1'
+  }
+  {
+    content: loadTextContent('artifacts/Get-OneDrive.ps1')
+    fileName: 'Get-OneDrive.ps1'
+  }
+  {
+    content: loadTextContent('artifacts/Get-Teams.ps1')
+    fileName: 'Get-Teams.ps1'
+  }
+  {
+    content: loadTextContent('artifacts/Get-VDOT.ps1')
+    fileName: 'Get-VDOT.ps1'
+  }
+  {
+    content: loadTextContent('artifacts/Remove-FSLogix.ps1')
+    fileName: 'Remove-FSLogix.ps1'
+  }
+  {
+    content: loadTextContent('artifacts/Remove-OneDrive.ps1')
+    fileName: 'Remove-OneDrive.ps1'
+  }
+  {
+    content: loadTextContent('artifacts/Set-RegistrySetting.ps1')
+    fileName: 'Set-RegistrySetting.ps1'
+  }
+  {
+    content: loadTextContent('artifacts/Set-VDOT.ps1')
+    fileName: 'Set-VDOT.ps1'
+  }
+]
+var ContainerName = 'artifacts'
+var ContainerUri = 'https://${StorageAccountName}.blob.${StorageSuffix}/${ContainerName}/'
 var DeploymentScriptName = 'ds-${NamingStandard}'
 var ImageTemplateName = 'it-${toLower(ImageDefinitionName)}-${Environment}-${LocationShortName}'
 var LocationShortName = Locations[Location].acronym
 var Locations = loadJsonContent('artifacts/locations.json')
 var NamingStandard = 'aib-${Environment}-${LocationShortName}'
+var O365FileName = 'office365x64.xml'
+var O365ConfigHeader = '<Configuration><Add OfficeClientEdition="64" Channel="Current">'
+var O365AddOffice = InstallOffice ? '<Product ID="O365ProPlusRetail"><Language ID="en-us" /></Product>' : ''
+var O365AddProject = InstallProject ? '<Product ID="ProjectProRetail"><Language ID="en-us" /></Product>' : ''
+var O365AddVisio = InstallVisio ? '<Product ID="VisioProRetail"><Language ID="en-us" /></Product>' : ''
+var O365ConfigFooter = '</Add><Updates Enabled="FALSE" /><Display Level="None" AcceptEULA="TRUE" /><Property Name="FORCEAPPSHUTDOWN" Value="TRUE"/><Property Name="SharedComputerLicensing" Value="1"/></Configuration>'
+var O365Content = '${O365ConfigHeader}${O365AddOffice}${O365AddProject}${O365AddVisio}${O365ConfigFooter}'
+var PrivateDnsZoneName = 'privatelink.file.${StorageSuffix}'
 var ResourceGroup = 'rg-${NamingStandard}'
 var Roles = [
   {
@@ -139,8 +212,8 @@ var Roles = [
   }
 ]
 var StagingResourceGroupName = 'rg-aib-${Environment}-${LocationShortName}-staging-${toLower(ImageDefinitionName)}'
-var StorageUri = 'https://${StorageAccountName}.blob.${environment().suffixes.storage}/${StorageContainerName}/'
-
+var StorageAccountName = 'saaib${Environment}${LocationShortName}'
+var StorageSuffix = environment().suffixes.storage
 
 resource rg 'Microsoft.Resources/resourceGroups@2019-10-01' = {
   name: ResourceGroup
@@ -177,18 +250,24 @@ module roleAssignments 'modules/roleAssignments.bicep' = [for i in range(0, leng
   name: 'RoleAssignments_${i}_${Timestamp}'
   scope: resourceGroup(Roles[i].resourceGroup)
   params: {
-    PrincipalId: userAssignedIdentity.outputs.userAssignedIdentityPrincipalId
+    PrincipalId: userAssignedIdentity.outputs.PrincipalId
     RoleDefinitionId: roleDefinitions[i].id
   }
 }]
 
-module roleAssignment_Storage 'modules/roleAssignments.bicep' = {
-  name: 'RoleAssignment_${StorageAccountName}_${Timestamp}'
-  scope: resourceGroup(StorageAccountResourceGroupName)
+module storageAccount 'modules/storageAccout.bicep' = {
+  scope: rg
+  name: 'StorageAccount_${Timestamp}'
   params: {
-    PrincipalId: userAssignedIdentity.outputs.userAssignedIdentityPrincipalId
-    RoleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1') // Storage Blob Data Reader
+    Location: Location
+    PrivateDnsZoneName: PrivateDnsZoneName
     StorageAccountName: StorageAccountName
+    StorageEndpoint: StorageEndpoint
+    SubnetName: SubnetName
+    Tags: Tags
+    UserAssignedIdentityPrincipalId: userAssignedIdentity.outputs.PrincipalId
+    VirtualNetworkName: VirtualNetworkName
+    VirtualNetworkResourceGroupName: VirtualNetworkResourceGroupName
   }
 }
 
@@ -208,66 +287,52 @@ module computeGallery 'modules/computeGallery.bicep' = {
   }
 }
 
-module networkPolicy 'modules/networkPolicy.bicep' = if(!(empty(SubnetName)) && !(empty(VirtualNetworkName)) && !(empty(VirtualNetworkResourceGroupName))) {
+module networkPolicy 'modules/networkPolicy.bicep' = if (!(empty(SubnetName)) && !(empty(VirtualNetworkName)) && !(empty(VirtualNetworkResourceGroupName))) {
   name: 'NetworkPolicy_${Timestamp}'
   scope: rg
   params: {
+    ContainerUri: ContainerUri
     Environment: Environment
     Location: Location
     LocationShortName: LocationShortName
     SubnetName: SubnetName
     Tags: Tags
     Timestamp: Timestamp
-    UserAssignedIdentityResourceId: userAssignedIdentity.outputs.userAssignedIdentityResourceId
+    UserAssignedIdentityResourceId: userAssignedIdentity.outputs.ResourceId
     VirtualNetworkName: VirtualNetworkName
     VirtualNetworkResourceGroupName: VirtualNetworkResourceGroupName
   }
   dependsOn: [
-    roleAssignment_Storage
     roleAssignments
   ]
 }
 
-module office365 'modules/o365.bicep' = if(DeployOffice || DeployProject || DeployVisio) {
+module uploadBlobs 'modules/deploymentScript.bicep' = [for i in range(0, length(Assets)): {
   scope: rg
-  name: 'Office365_Configuration_${Timestamp}'
+  name: 'DeploymentScript_UploadBlob_${i}_${Timestamp}'
   params: {
-    DeploymentScriptName: DeploymentScriptName
-    DeployOffice: DeployOffice
-    DeployProject: DeployProject
-    DeployVisio: DeployVisio
+    ContainerName: ContainerName
+    Content: Assets[i].content
+    DeploymentScriptName: '${DeploymentScriptName}-uploadBlob-${replace(Assets[i].fileName, '.ps1', '')}'
+    FileName: Assets[i].fileName
     Location: Location
     StorageAccountName: StorageAccountName
-    StorageAccountResourceGroupName: StorageAccountResourceGroupName
-    StorageContainerName: StorageContainerName
     Tags: Tags
   }
-}
-
-module oneDrive 'modules/oneDrive.bicep' = if(DeployOneDrive) {
-  scope: rg
-  name: 'OneDrive_Configuration_${Timestamp}'
-  params: {
-    DeploymentScriptName: DeploymentScriptName
-    Location: Location
-    StorageAccountName: StorageAccountName
-    StorageAccountResourceGroupName: StorageAccountResourceGroupName
-    StorageContainerName: StorageContainerName
-    Tags: Tags
-  }
-}
+}]
 
 module imageTemplate 'modules/imageTemplate.bicep' = {
   name: 'ImageTemplate_${Timestamp}'
   scope: rg
   params: {
-    DeployFSLogix: DeployFSLogix
-    DeployOffice: DeployOffice
-    DeployOneDrive: DeployOneDrive
-    DeployProject: DeployProject
-    DeployTeams: DeployTeams
-    DeployVirtualDesktopOptimizationTool: DeployVirtualDesktopOptimizationTool
-    DeployVisio: DeployVisio
+    ContainerUri: ContainerUri
+    InstallFSLogix: InstallFSLogix
+    InstallOffice: InstallOffice
+    InstallOneDrive: InstallOneDrive
+    InstallProject: InstallProject
+    InstallTeams: InstallTeams
+    InstallVirtualDesktopOptimizationTool: InstallVirtualDesktopOptimizationTool
+    InstallVisio: InstallVisio
     ImageDefinitionResourceId: computeGallery.outputs.ImageDefinitionResourceId
     ImageOffer: ImageOffer
     ImagePublisher: ImagePublisher
@@ -277,25 +342,22 @@ module imageTemplate 'modules/imageTemplate.bicep' = {
     ImageVersion: ImageVersion
     Location: Location
     StagingResourceGroupName: StagingResourceGroupName
-    StorageUri: StorageUri
     SubnetName: SubnetName
     Tags: Tags
     Timestamp: Timestamp
-    UserAssignedIdentityResourceId: userAssignedIdentity.outputs.userAssignedIdentityResourceId
+    UserAssignedIdentityResourceId: userAssignedIdentity.outputs.ResourceId
     VirtualMachineSize: VirtualMachineSize
     VirtualNetworkName: VirtualNetworkName
     VirtualNetworkResourceGroupName: VirtualNetworkResourceGroupName
   }
   dependsOn: [
     networkPolicy
-    office365
-    oneDrive
-    roleAssignment_Storage
     roleAssignments
+    uploadBlobs
   ]
 }
 
-module policyExemptions 'modules/exemption.bicep' = [for i in range(0, length(ExemptPolicyAssignmentIds)): if(length(ExemptPolicyAssignmentIds) > 0) {
+module policyExemptions 'modules/exemption.bicep' = [for i in range(0, length(ExemptPolicyAssignmentIds)): if (length(ExemptPolicyAssignmentIds) > 0) {
   name: 'PolicyExemption_${i}'
   scope: resourceGroup(StagingResourceGroupName)
   params: {
