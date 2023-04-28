@@ -99,62 +99,8 @@ param VirtualNetworkResourceGroupName string = 'rg-net-d-eu'
 
 var DeploymentScriptName = 'ds-${NamingStandard}'
 var ImageTemplateName = 'it-${toLower(ImageDefinitionName)}-${Environment}-${LocationShortName}'
-var LocationShortName = LocationShortNames[Location]
-var LocationShortNames = {
-  australiacentral: 'ac'
-  australiacentral2: 'ac2'
-  australiaeast: 'ae'
-  australiasoutheast: 'as'
-  brazilsouth: 'bs2'
-  brazilsoutheast: 'bs'
-  canadacentral: 'cc'
-  canadaeast: 'ce'
-  centralindia: 'ci'
-  centralus: 'cu'
-  chinaeast: 'ce'
-  chinaeast2: 'ce2'
-  chinanorth: 'cn'
-  chinanorth2: 'cn2'
-  eastasia: 'ea'
-  eastus: 'eu'
-  eastus2: 'eu2'
-  francecentral: 'fc'
-  francesouth: 'fs'
-  germanynorth: 'gn'
-  germanywestcentral: 'gwc'
-  japaneast: 'je'
-  japanwest: 'jw'
-  jioindiawest: 'jiw'
-  koreacentral: 'kc'
-  koreasouth: 'ks'
-  northcentralus: 'ncu'
-  northeurope: 'ne2'
-  norwayeast: 'ne'
-  norwaywest: 'nw'
-  southafricanorth: 'san'
-  southafricawest: 'saw'
-  southcentralus: 'scu'
-  southindia: 'si'
-  southeastasia: 'sa'
-  switzerlandnorth: 'sn'
-  switzerlandwest: 'sw'
-  uaecentral: 'uc'
-  uaenorth: 'un'
-  uksouth: 'us'
-  ukwest: 'uw'
-  usdodcentral: 'uc'
-  usdodeast: 'ue'
-  usgovarizona: 'az'
-  usgoviowa: 'io'
-  usgovtexas: 'tx'
-  usgovvirginia: 'va'
-  westcentralus: 'wcu'
-  westeurope: 'we'
-  westindia: 'wi'
-  westus: 'wu'
-  westus2: 'wu2'
-  westus3: 'wu3'
-}
+var LocationShortName = Locations[Location].acronym
+var Locations = loadJsonContent('artifacts/locations.json')
 var NamingStandard = 'aib-${Environment}-${LocationShortName}'
 var ResourceGroup = 'rg-${NamingStandard}'
 var Roles = [
@@ -187,22 +133,6 @@ var Roles = [
           'Microsoft.Compute/images/read'
           'Microsoft.Compute/images/write'
           'Microsoft.Compute/images/delete'
-        ]
-      }
-    ]
-  }
-  {
-    resourceGroup: ResourceGroup
-    name: 'Deployment Script Contributor'
-    description: 'Allow Deployment Scripts to deploy required resources to run scripts'
-    permissions: [
-      {
-        actions: [
-          'Microsoft.Storage/storageAccounts/*'
-          'Microsoft.ContainerInstance/containerGroups/*'
-          'Microsoft.Resources/deployments/*'
-          'Microsoft.Resources/deploymentScripts/*'
-          'Microsoft.ManagedIdentity/userAssignedIdentities/assign/action'
         ]
       }
     ]
