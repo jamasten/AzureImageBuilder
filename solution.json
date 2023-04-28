@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.16.2.56959",
-      "templateHash": "17803699196208417213"
+      "templateHash": "6306283119503465437"
     }
   },
   "parameters": {
@@ -564,7 +564,7 @@
     "O365AddVisio": "[if(parameters('InstallVisio'), '<Product ID=\"VisioProRetail\"><Language ID=\"en-us\" /></Product>', '')]",
     "O365ConfigFooter": "</Add><Updates Enabled=\"FALSE\" /><Display Level=\"None\" AcceptEULA=\"TRUE\" /><Property Name=\"FORCEAPPSHUTDOWN\" Value=\"TRUE\"/><Property Name=\"SharedComputerLicensing\" Value=\"1\"/></Configuration>",
     "O365Content": "[format('{0}{1}{2}{3}{4}', variables('O365ConfigHeader'), variables('O365AddOffice'), variables('O365AddProject'), variables('O365AddVisio'), variables('O365ConfigFooter'))]",
-    "PrivateDnsZoneName": "[format('privatelink.file.{0}', variables('StorageSuffix'))]",
+    "PrivateDnsZoneName": "[format('privatelink.blob.{0}', variables('StorageSuffix'))]",
     "ResourceGroup": "[format('rg-{0}', variables('NamingStandard'))]",
     "Roles": [
       {
@@ -793,6 +793,15 @@
         },
         "mode": "Incremental",
         "parameters": {
+          "Assets": {
+            "value": "[variables('Assets')]"
+          },
+          "ContainerName": {
+            "value": "[variables('ContainerName')]"
+          },
+          "DeploymentScriptName": {
+            "value": "[variables('DeploymentScriptName')]"
+          },
           "Location": {
             "value": "[parameters('Location')]"
           },
@@ -811,6 +820,9 @@
           "Tags": {
             "value": "[parameters('Tags')]"
           },
+          "Timestamp": {
+            "value": "[parameters('Timestamp')]"
+          },
           "UserAssignedIdentityPrincipalId": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp'))), '2022-09-01').outputs.PrincipalId.value]"
           },
@@ -828,10 +840,19 @@
             "_generator": {
               "name": "bicep",
               "version": "0.16.2.56959",
-              "templateHash": "17643676948897251481"
+              "templateHash": "14082065925591449626"
             }
           },
           "parameters": {
+            "Assets": {
+              "type": "array"
+            },
+            "ContainerName": {
+              "type": "string"
+            },
+            "DeploymentScriptName": {
+              "type": "string"
+            },
             "Location": {
               "type": "string"
             },
@@ -849,6 +870,9 @@
             },
             "Tags": {
               "type": "object"
+            },
+            "Timestamp": {
+              "type": "string"
             },
             "UserAssignedIdentityPrincipalId": {
               "type": "string"
@@ -966,7 +990,7 @@
                     "properties": {
                       "privateLinkServiceId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('StorageAccountName'))]",
                       "groupIds": [
-                        "file"
+                        "blob"
                       ]
                     }
                   }
@@ -1010,6 +1034,108 @@
               "dependsOn": [
                 "[resourceId('Microsoft.Network/privateDnsZones', parameters('PrivateDnsZoneName'))]"
               ]
+            },
+            {
+              "copy": {
+                "name": "uploadBlobs",
+                "count": "[length(range(0, length(parameters('Assets'))))]"
+              },
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[format('DeploymentScript_UploadBlob_{0}_{1}', range(0, length(parameters('Assets')))[copyIndex()], parameters('Timestamp'))]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "ContainerName": {
+                    "value": "[parameters('ContainerName')]"
+                  },
+                  "Content": {
+                    "value": "[parameters('Assets')[range(0, length(parameters('Assets')))[copyIndex()]].content]"
+                  },
+                  "DeploymentScriptName": {
+                    "value": "[format('{0}-uploadBlob-{1}', parameters('DeploymentScriptName'), replace(parameters('Assets')[range(0, length(parameters('Assets')))[copyIndex()]].fileName, '.ps1', ''))]"
+                  },
+                  "FileName": {
+                    "value": "[parameters('Assets')[range(0, length(parameters('Assets')))[copyIndex()]].fileName]"
+                  },
+                  "Location": {
+                    "value": "[parameters('Location')]"
+                  },
+                  "StorageAccountName": {
+                    "value": "[parameters('StorageAccountName')]"
+                  },
+                  "Tags": {
+                    "value": "[parameters('Tags')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.16.2.56959",
+                      "templateHash": "836468705891648616"
+                    }
+                  },
+                  "parameters": {
+                    "ContainerName": {
+                      "type": "string"
+                    },
+                    "Content": {
+                      "type": "string"
+                    },
+                    "DeploymentScriptName": {
+                      "type": "string"
+                    },
+                    "FileName": {
+                      "type": "string"
+                    },
+                    "Location": {
+                      "type": "string"
+                    },
+                    "StorageAccountName": {
+                      "type": "string"
+                    },
+                    "Tags": {
+                      "type": "object"
+                    }
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Resources/deploymentScripts",
+                      "apiVersion": "2020-10-01",
+                      "name": "[parameters('DeploymentScriptName')]",
+                      "location": "[parameters('Location')]",
+                      "tags": "[parameters('Tags')]",
+                      "kind": "AzureCLI",
+                      "properties": {
+                        "azCliVersion": "2.26.1",
+                        "timeout": "PT5M",
+                        "retentionInterval": "PT1H",
+                        "environmentVariables": [
+                          {
+                            "name": "AZURE_STORAGE_ACCOUNT",
+                            "value": "[parameters('StorageAccountName')]"
+                          },
+                          {
+                            "name": "AZURE_STORAGE_KEY",
+                            "secureValue": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('StorageAccountName')), '2021-01-01').keys[0].value]"
+                          },
+                          {
+                            "name": "CONTENT",
+                            "value": "[parameters('Content')]"
+                          }
+                        ],
+                        "scriptContent": "[format('echo \"$CONTENT\" > {0} && az storage blob upload -f {1} -c {2} -n {3}', parameters('FileName'), parameters('FileName'), parameters('ContainerName'), parameters('FileName'))]"
+                      }
+                    }
+                  ]
+                }
+              }
             }
           ]
         }
@@ -1151,9 +1277,6 @@
         },
         "mode": "Incremental",
         "parameters": {
-          "ContainerUri": {
-            "value": "[variables('ContainerUri')]"
-          },
           "Environment": {
             "value": "[parameters('Environment')]"
           },
@@ -1189,13 +1312,10 @@
             "_generator": {
               "name": "bicep",
               "version": "0.16.2.56959",
-              "templateHash": "10681683218429724560"
+              "templateHash": "7569676084512633640"
             }
           },
           "parameters": {
-            "ContainerUri": {
-              "type": "string"
-            },
             "Environment": {
               "type": "string"
             },
@@ -1239,13 +1359,13 @@
                 }
               },
               "properties": {
+                "arguments": "[format('-Subnet {0} -VirtualNetwork {1} -ResourceGroup {2}', parameters('SubnetName'), parameters('VirtualNetworkName'), parameters('VirtualNetworkResourceGroupName'))]",
+                "azPowerShellVersion": "9.4",
+                "cleanupPreference": "Always",
                 "forceUpdateTag": "[parameters('Timestamp')]",
-                "azPowerShellVersion": "5.4",
-                "arguments": "[format('-SubnetName {0} -VirtualNetworkName {1} -VirtualNetworkResourceGroupName {2}', parameters('SubnetName'), parameters('VirtualNetworkName'), parameters('VirtualNetworkResourceGroupName'))]",
-                "primaryScriptUri": "[format('{0}Disable-AzurePrivateLinkServiceNetworkPolicy.ps1', parameters('ContainerUri'))]",
-                "timeout": "PT2H",
-                "cleanupPreference": "OnSuccess",
-                "retentionInterval": "P1D"
+                "retentionInterval": "PT2H",
+                "scriptContent": "$VNET = Get-AzVirtualNetwork -Name $VirtualNetwork -ResourceGroupName $ResourceGroup; ($VNET | Select-Object -ExpandProperty \"Subnets\" | Where-Object {$_.Name -eq $Subnet}).privateLinkServiceNetworkPolicies = \"Disabled\"; $VNET | Set-AzVirtualNetwork",
+                "timeout": "PT30M"
               }
             }
           ]
@@ -1255,112 +1375,6 @@
         "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('ResourceGroup'))]",
         "roleAssignments",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp')))]"
-      ]
-    },
-    {
-      "copy": {
-        "name": "uploadBlobs",
-        "count": "[length(range(0, length(variables('Assets'))))]"
-      },
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
-      "name": "[format('DeploymentScript_UploadBlob_{0}_{1}', range(0, length(variables('Assets')))[copyIndex()], parameters('Timestamp'))]",
-      "resourceGroup": "[variables('ResourceGroup')]",
-      "properties": {
-        "expressionEvaluationOptions": {
-          "scope": "inner"
-        },
-        "mode": "Incremental",
-        "parameters": {
-          "ContainerName": {
-            "value": "[variables('ContainerName')]"
-          },
-          "Content": {
-            "value": "[variables('Assets')[range(0, length(variables('Assets')))[copyIndex()]].content]"
-          },
-          "DeploymentScriptName": {
-            "value": "[format('{0}-uploadBlob-{1}', variables('DeploymentScriptName'), replace(variables('Assets')[range(0, length(variables('Assets')))[copyIndex()]].fileName, '.ps1', ''))]"
-          },
-          "FileName": {
-            "value": "[variables('Assets')[range(0, length(variables('Assets')))[copyIndex()]].fileName]"
-          },
-          "Location": {
-            "value": "[parameters('Location')]"
-          },
-          "StorageAccountName": {
-            "value": "[variables('StorageAccountName')]"
-          },
-          "Tags": {
-            "value": "[parameters('Tags')]"
-          }
-        },
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "metadata": {
-            "_generator": {
-              "name": "bicep",
-              "version": "0.16.2.56959",
-              "templateHash": "836468705891648616"
-            }
-          },
-          "parameters": {
-            "ContainerName": {
-              "type": "string"
-            },
-            "Content": {
-              "type": "string"
-            },
-            "DeploymentScriptName": {
-              "type": "string"
-            },
-            "FileName": {
-              "type": "string"
-            },
-            "Location": {
-              "type": "string"
-            },
-            "StorageAccountName": {
-              "type": "string"
-            },
-            "Tags": {
-              "type": "object"
-            }
-          },
-          "resources": [
-            {
-              "type": "Microsoft.Resources/deploymentScripts",
-              "apiVersion": "2020-10-01",
-              "name": "[parameters('DeploymentScriptName')]",
-              "location": "[parameters('Location')]",
-              "tags": "[parameters('Tags')]",
-              "kind": "AzureCLI",
-              "properties": {
-                "azCliVersion": "2.26.1",
-                "timeout": "PT5M",
-                "retentionInterval": "PT1H",
-                "environmentVariables": [
-                  {
-                    "name": "AZURE_STORAGE_ACCOUNT",
-                    "value": "[parameters('StorageAccountName')]"
-                  },
-                  {
-                    "name": "AZURE_STORAGE_KEY",
-                    "secureValue": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('StorageAccountName')), '2021-01-01').keys[0].value]"
-                  },
-                  {
-                    "name": "CONTENT",
-                    "value": "[parameters('Content')]"
-                  }
-                ],
-                "scriptContent": "[format('echo \"$CONTENT\" > {0} && az storage blob upload -f {1} -c {2} -n {3}', parameters('FileName'), parameters('FileName'), parameters('ContainerName'), parameters('FileName'))]"
-              }
-            }
-          ]
-        }
-      },
-      "dependsOn": [
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('ResourceGroup'))]"
       ]
     },
     {
@@ -1647,7 +1661,7 @@
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('NetworkPolicy_{0}', parameters('Timestamp')))]",
         "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('ResourceGroup'))]",
         "roleAssignments",
-        "uploadBlobs",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('StorageAccount_{0}', parameters('Timestamp')))]",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp')))]"
       ]
     },
