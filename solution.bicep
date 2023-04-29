@@ -69,6 +69,9 @@ param InstallVisio bool = true
 @description('The location for the resources deployed in this solution.')
 param Location string = deployment().location
 
+@description('The resource ID for an existing Private DNS Zone for Azure Blobs.')
+param ExistingPrivateDnsZoneResourceId string = ''
+
 @allowed([
   'PrivateEndpoint'
   'PublicEndpoint'
@@ -77,7 +80,7 @@ param Location string = deployment().location
 @description('Determine the type of endpoint to enable on the storage account. DNS forwarding should already be configured if choosing a private endpoint.')
 param StorageEndpoint string
 
-@description('The subnet name for the custom virtual network.')
+@description('The subnet name of an existing virtual network.')
 param SubnetName string = 'Clients'
 
 param Tags object = {}
@@ -88,10 +91,10 @@ param Timestamp string = utcNow('yyyyMMddhhmmss')
 @description('The size of the virtual machine used for creating the image.  The recommendation is to use a \'Standard_D2_v2\' size or greater for AVD. https://github.com/danielsollondon/azvmimagebuilder/tree/master/solutions/14_Building_Images_WVD')
 param VirtualMachineSize string = 'Standard_D4ds_v5'
 
-@description('The name for the custom virtual network.')
+@description('The name of an existing virtual network. If choosing a private endpoint for the storage account, the virtual network should contain a DNS server with the appropriate conditional forwarder.')
 param VirtualNetworkName string = 'vnet-net-d-eu'
 
-@description('The resource group name for the custom virtual network.')
+@description('The resource group name of an existing virtual network. If choosing a private endpoint for the storage account, the virtual network should contain a DNS server with the appropriate conditional forwarder.')
 param VirtualNetworkResourceGroupName string = 'rg-net-d-eu'
 
 var Assets = [
@@ -262,6 +265,7 @@ module storageAccount 'modules/storageAccount.bicep' = {
     Assets: Assets
     ContainerName: ContainerName
     DeploymentScriptName: DeploymentScriptName
+    ExistingPrivateDnsZoneResourceId: ExistingPrivateDnsZoneResourceId
     Location: Location
     PrivateDnsZoneName: PrivateDnsZoneName
     StorageAccountName: StorageAccountName
