@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.16.2.56959",
-      "templateHash": "15139530043979303611"
+      "templateHash": "9390605764863033030"
     }
   },
   "parameters": {
@@ -146,6 +146,13 @@
         "description": "The location for the resources deployed in this solution."
       }
     },
+    "ExistingPrivateDnsZoneResourceId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "The resource ID for an existing Private DNS Zone for Azure Blobs."
+      }
+    },
     "StorageEndpoint": {
       "type": "string",
       "metadata": {
@@ -161,7 +168,7 @@
       "type": "string",
       "defaultValue": "Clients",
       "metadata": {
-        "description": "The subnet name for the custom virtual network."
+        "description": "The subnet name of an existing virtual network."
       }
     },
     "Tags": {
@@ -186,14 +193,14 @@
       "type": "string",
       "defaultValue": "vnet-net-d-eu",
       "metadata": {
-        "description": "The name for the custom virtual network."
+        "description": "The name of an existing virtual network. If choosing a private endpoint for the storage account, the virtual network should contain a DNS server with the appropriate conditional forwarder."
       }
     },
     "VirtualNetworkResourceGroupName": {
       "type": "string",
       "defaultValue": "rg-net-d-eu",
       "metadata": {
-        "description": "The resource group name for the custom virtual network."
+        "description": "The resource group name of an existing virtual network. If choosing a private endpoint for the storage account, the virtual network should contain a DNS server with the appropriate conditional forwarder."
       }
     }
   },
@@ -802,6 +809,9 @@
           "DeploymentScriptName": {
             "value": "[variables('DeploymentScriptName')]"
           },
+          "ExistingPrivateDnsZoneResourceId": {
+            "value": "[parameters('ExistingPrivateDnsZoneResourceId')]"
+          },
           "Location": {
             "value": "[parameters('Location')]"
           },
@@ -840,7 +850,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.16.2.56959",
-              "templateHash": "14082065925591449626"
+              "templateHash": "9807021083480193472"
             }
           },
           "parameters": {
@@ -851,6 +861,9 @@
               "type": "string"
             },
             "DeploymentScriptName": {
+              "type": "string"
+            },
+            "ExistingPrivateDnsZoneResourceId": {
               "type": "string"
             },
             "Location": {
@@ -885,6 +898,8 @@
             }
           },
           "variables": {
+            "PrivateDnsZoneResourceGroupName": "[if(empty(parameters('ExistingPrivateDnsZoneResourceId')), resourceGroup().name, split(parameters('ExistingPrivateDnsZoneResourceId'), '/')[4])]",
+            "PrivateDnsZoneSubscriptionId": "[if(empty(parameters('ExistingPrivateDnsZoneResourceId')), subscription().subscriptionId, split(parameters('ExistingPrivateDnsZoneResourceId'), '/')[2])]",
             "RoleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1')]",
             "SubnetResourceId": "[resourceId(parameters('VirtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('VirtualNetworkName'), parameters('SubnetName'))]",
             "VirtualNetworkRules": {
@@ -926,11 +941,7 @@
                     }
                   },
                   "keySource": "Microsoft.Storage"
-                },
-                "azureFilesIdentityBasedAuthentication": {
-                  "directoryServiceOptions": "None"
-                },
-                "largeFileSharesState": null
+                }
               }
             },
             {
@@ -967,12 +978,30 @@
               ]
             },
             {
+              "condition": "[empty(parameters('ExistingPrivateDnsZoneResourceId'))]",
               "type": "Microsoft.Network/privateDnsZones",
               "apiVersion": "2018-09-01",
               "name": "[parameters('PrivateDnsZoneName')]",
               "location": "global",
               "tags": "[parameters('Tags')]",
               "properties": {}
+            },
+            {
+              "condition": "[empty(parameters('ExistingPrivateDnsZoneResourceId'))]",
+              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+              "apiVersion": "2018-09-01",
+              "name": "[format('{0}/{1}', parameters('PrivateDnsZoneName'), format('link-{0}', parameters('VirtualNetworkName')))]",
+              "location": "global",
+              "tags": "[parameters('Tags')]",
+              "properties": {
+                "registrationEnabled": false,
+                "virtualNetwork": {
+                  "id": "[resourceId(parameters('VirtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks', parameters('VirtualNetworkName'))]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', parameters('PrivateDnsZoneName'))]"
+              ]
             },
             {
               "type": "Microsoft.Network/privateEndpoints",
@@ -1009,7 +1038,7 @@
                   {
                     "name": "ipconfig1",
                     "properties": {
-                      "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', parameters('PrivateDnsZoneName'))]"
+                      "privateDnsZoneId": "[if(empty(parameters('ExistingPrivateDnsZoneResourceId')), resourceId('Microsoft.Network/privateDnsZones', parameters('PrivateDnsZoneName')), extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', variables('PrivateDnsZoneSubscriptionId'), variables('PrivateDnsZoneResourceGroupName')), 'Microsoft.Network/privateDnsZones', if(empty(parameters('ExistingPrivateDnsZoneResourceId')), parameters('PrivateDnsZoneName'), parameters('PrivateDnsZoneName'))))]"
                     }
                   }
                 ]
@@ -1017,22 +1046,6 @@
               "dependsOn": [
                 "[resourceId('Microsoft.Network/privateDnsZones', parameters('PrivateDnsZoneName'))]",
                 "[resourceId('Microsoft.Network/privateEndpoints', format('pe-{0}', parameters('StorageAccountName')))]"
-              ]
-            },
-            {
-              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
-              "apiVersion": "2018-09-01",
-              "name": "[format('{0}/{1}', parameters('PrivateDnsZoneName'), format('link-{0}', parameters('VirtualNetworkName')))]",
-              "location": "global",
-              "tags": "[parameters('Tags')]",
-              "properties": {
-                "registrationEnabled": false,
-                "virtualNetwork": {
-                  "id": "[resourceId(parameters('VirtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks', parameters('VirtualNetworkName'))]"
-                }
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Network/privateDnsZones', parameters('PrivateDnsZoneName'))]"
               ]
             },
             {
