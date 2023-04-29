@@ -1,6 +1,7 @@
 param Assets array
 param ContainerName string
 param DeploymentScriptName string
+param ExistingPrivateDnsZoneResourceId string
 param Location string
 param PrivateDnsZoneName string
 param StorageAccountName string
@@ -12,6 +13,8 @@ param UserAssignedIdentityPrincipalId string
 param VirtualNetworkName string
 param VirtualNetworkResourceGroupName string
 
+var PrivateDnsZoneResourceGroupName = empty(ExistingPrivateDnsZoneResourceId) ? resourceGroup().name : split(ExistingPrivateDnsZoneResourceId, '/')[4]
+var PrivateDnsZoneSubscriptionId = empty(ExistingPrivateDnsZoneResourceId) ? subscription().subscriptionId : split(ExistingPrivateDnsZoneResourceId, '/')[2]
 var RoleDefinitionId = resourceId('Microsoft.Authorization/roleDefinitions', '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1') // Storage Blob Data Reader
 var SubnetResourceId = resourceId(VirtualNetworkResourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', VirtualNetworkName, SubnetName)
 var VirtualNetworkRules = {
@@ -51,10 +54,6 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2021-02-01' = {
       }
       keySource: 'Microsoft.Storage'
     }
-    azureFilesIdentityBasedAuthentication: {
-      directoryServiceOptions: 'None'
-    }
-    largeFileSharesState: null
   }
 }
 
@@ -95,11 +94,29 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   }
 }
 
-resource privateDnsZone 'Microsoft.Network/privateDnsZones@2018-09-01' = {
+resource privateDnsZone 'Microsoft.Network/privateDnsZones@2018-09-01' = if(empty(ExistingPrivateDnsZoneResourceId)) {
   name: PrivateDnsZoneName
   location: 'global'
   tags: Tags
   properties: {}
+}
+
+resource privateDnsZone_existing 'Microsoft.Network/privateDnsZones@2018-09-01' existing = {
+  name: empty(ExistingPrivateDnsZoneResourceId) ? privateDnsZone.name : PrivateDnsZoneName
+  scope: resourceGroup(PrivateDnsZoneSubscriptionId, PrivateDnsZoneResourceGroupName)
+}
+
+resource virtualNetworkLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2018-09-01' = if(empty(ExistingPrivateDnsZoneResourceId)) {
+  parent: privateDnsZone
+  name: 'link-${VirtualNetworkName}'
+  location: 'global'
+  tags: Tags
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: resourceId(VirtualNetworkResourceGroupName, 'Microsoft.Network/virtualNetworks', VirtualNetworkName)
+    }
+  }
 }
 
 resource privateEndpoint 'Microsoft.Network/privateEndpoints@2020-05-01' = {
@@ -132,22 +149,9 @@ resource privateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneG
       {
         name: 'ipconfig1'
         properties: {
-          privateDnsZoneId: privateDnsZone.id
+          privateDnsZoneId: empty(ExistingPrivateDnsZoneResourceId) ? privateDnsZone.id : privateDnsZone_existing.id
         }
       }
     ]
-  }
-}
-
-resource virtualNetworkLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2018-09-01' = {
-  parent: privateDnsZone
-  name: 'link-${VirtualNetworkName}'
-  location: 'global'
-  tags: Tags
-  properties: {
-    registrationEnabled: false
-    virtualNetwork: {
-      id: resourceId(VirtualNetworkResourceGroupName, 'Microsoft.Network/virtualNetworks', VirtualNetworkName)
-    }
   }
 }
