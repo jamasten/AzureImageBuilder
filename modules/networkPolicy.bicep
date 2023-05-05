@@ -26,7 +26,7 @@ resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
     cleanupPreference: 'Always'
     forceUpdateTag: Timestamp
     retentionInterval: 'PT2H'
-    scriptContent: '$VNET = Get-AzVirtualNetwork -Name $VirtualNetwork -ResourceGroupName $ResourceGroup; ($VNET | Select-Object -ExpandProperty "Subnets" | Where-Object {$_.Name -eq $Subnet}).privateLinkServiceNetworkPolicies = "Disabled"; $VNET | Set-AzVirtualNetwork'
+    scriptContent: 'Param([string]$ResourceGroup, [string]$Subnet, [string]$VirtualNetwork); $VNET = Get-AzVirtualNetwork -Name $VirtualNetwork -ResourceGroupName $ResourceGroup; ($VNET | Select-Object -ExpandProperty "Subnets" | Where-Object {$_.Name -eq $Subnet}).privateLinkServiceNetworkPolicies = "Disabled"; $VNET | Set-AzVirtualNetwork'
     timeout: 'PT30M'
   }
 }
