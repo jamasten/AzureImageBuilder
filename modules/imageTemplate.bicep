@@ -140,7 +140,7 @@ var Sysprep = [
     inline: [
       '$ErrorActionPreference = "Stop"'
       '$Path = "C:\\DeprovisioningScript.ps1"'
-      '((Get-Content -Path $Path -Raw).Replace("/quit";"/quit /mode:vm") | Set-Content -Path $Path'
+      '((Get-Content -Path $Path -Raw).Replace("/quit","/quit /mode:vm") | Set-Content -Path $Path'
       'Write-Host "Updated the deprovisioning script"'
     ]
   }
@@ -209,9 +209,9 @@ var VDOT = InstallVirtualDesktopOptimizationTool ? [
       'Expand-Archive -LiteralPath $ZIP -DestinationPath "C:\\temp" -Force'
       '$Path = (Get-ChildItem -Path "C:\\temp" -Recurse | Where-Object {$_.Name -eq "Windows_VDOT.ps1"}).FullName'
       '$Script = Get-Content -Path $Path'
-      '$ScriptUpdate = $Script.Replace("Set-NetAdapterAdvancedProperty";"#Set-NetAdapterAdvancedProperty")'
+      '$ScriptUpdate = $Script.Replace("Set-NetAdapterAdvancedProperty","#Set-NetAdapterAdvancedProperty")'
       '$ScriptUpdate | Set-Content -Path $Path'
-      '& $Path -Optimizations @("AppxPackages";"Autologgers";"DefaultUserSettings";"LGPO";"NetworkOptimizations";"ScheduledTasks";"Services";"WindowsMediaPlayer") -AdvancedOptimizations @("Edge";"RemoveLegacyIE") -AcceptEULA'
+      '& $Path -Optimizations @("AppxPackages","Autologgers","DefaultUserSettings","LGPO";"NetworkOptimizations","ScheduledTasks","Services","WindowsMediaPlayer") -AdvancedOptimizations @("Edge","RemoveLegacyIE") -AcceptEULA'
       'Write-Host "Optimized the operating system using the Virtual Desktop Optimization Tool"'
     ]
   }
