@@ -1,11 +1,3 @@
-param ContainerUri string
-param InstallFSLogix bool
-param InstallOffice bool
-param InstallOneDrive bool
-param InstallProject bool
-param InstallTeams bool
-param InstallVirtualDesktopOptimizationTool bool
-param InstallVisio bool
 param ImageDefinitionResourceId string
 param ImageOffer string
 param ImagePublisher string
@@ -13,21 +5,35 @@ param ImageSku string
 param ImageStorageAccountType string
 param ImageTemplateName string
 param ImageVersion string
+param InstallAccess bool
+param InstallExcel bool
+param InstallFSLogix bool
+param InstallOneDriveForBusiness bool
+param InstallOneNote bool
+param InstallOutlook bool
+param InstallPowerPoint bool
+param InstallProject bool
+param InstallPublisher bool
+param InstallSkypeForBusiness bool
+param InstallTeams bool
+param InstallVirtualDesktopOptimizationTool bool
+param InstallVisio bool
+param InstallWord bool
 param Location string
 param StagingResourceGroupName string
 param SubnetName string
 param Tags object
+param TeamsUrl string
 param Timestamp string
 param UserAssignedIdentityResourceId string
 param VirtualMachineSize string
 param VirtualNetworkName string
 param VirtualNetworkResourceGroupName string
 
-
 var CreateTempDir = [
   {
     type: 'PowerShell'
-    name: 'Create TEMP Directory'
+    name: 'Create the TEMP Directory'
     runElevated: true
     runAsSystem: true
     inline: [
@@ -35,196 +41,105 @@ var CreateTempDir = [
     ]
   }
 ]
-
-var FSLogixType = contains(ImageSku, 'avd') ? [
+var Environment = environment().name
+var FSLogix = InstallFSLogix ? [
   {
     type: 'PowerShell'
     name: 'Download FSLogix'
     runElevated: true
     runAsSystem: true
-    scriptUri: '${ContainerUri}Get-FSLogix.ps1'
-  }
-  {
-    type: 'PowerShell'
-    name: 'Uninstall FSLogix'
-    runElevated: true
-    runAsSystem: true
-    scriptUri: '${ContainerUri}Remove-FSLogix.ps1'
-  }
-  {
-    type: 'WindowsRestart'
-    name: 'Restart after FSLogix uninstall'
-    restartTimeout: '5m'
+    inline: '$ErrorActionPreference = "Stop"; $ZIP = "C:\\temp\\fslogix.zip"; Invoke-WebRequest -Uri "https://aka.ms/fslogix_download" -OutFile $ZIP; Unblock-File -Path $ZIP; Expand-Archive -LiteralPath $ZIP -DestinationPath "C:\\temp\\fslogix" -Force; Write-Host "Downloaded the latest version of FSLogix";'
   }
   {
     type: 'PowerShell'
     name: 'Install FSLogix'
     runElevated: true
     runAsSystem: true
-    scriptUri: '${ContainerUri}Add-FSLogix.ps1'
+    scriptUri: '$ErrorActionPreference = "Stop"; Start-Process -FilePath "C:\\temp\\fslogix\\x64\\Release\\FSLogixAppsSetup.exe" -ArgumentList "/install /quiet /norestart" -Wait -PassThru | Out-Null; Write-Host "Installed the latest version of FSLogix";'
   }
   {
     type: 'WindowsRestart'
-    name: 'Restart after FSLogix install'
-    restartTimeout: '5m'
-  }
-] : [
-  {
-    type: 'PowerShell'
-    name: 'Download FSLogix'
-    runElevated: true
-    runAsSystem: true
-    scriptUri: '${ContainerUri}Get-FSLogix.ps1'
-  }
-  {
-    type: 'PowerShell'
-    name: 'Install FSLogix'
-    runElevated: true
-    runAsSystem: true
-    scriptUri: '${ContainerUri}fslogix.ps1'
-  }
-  {
-    type: 'WindowsRestart'
-    name: 'Restart after FSLogix install'
-    restartTimeout: '5m'
-  }
-]
-var FSLogix = InstallFSLogix ? FSLogixType : []
-var Functions = [
-  {
-    type: 'File'
-    name: 'Download Functions Script'
-    sourceUri: '${ContainerUri}Set-RegistrySetting.ps1'
-    destination: 'C:\\temp\\Set-RegistrySetting.ps1'
-  }
-]
-var Office = InstallOffice || InstallVisio || InstallProject ? [
-  {
-    type: 'PowerShell'
-    name: 'Download Microsoft Office 365'
-    runElevated: true
-    runAsSystem: true
-    scriptUri: '${ContainerUri}Get-O365.ps1'
-  }  
-  {
-    type: 'File'
-    name: 'Download Microsoft Office 365 Configuration File'
-    sourceUri: '${ContainerUri}office365x64.xml'
-    destination: 'C:\\temp\\office365x64.xml'
-  }
-  {
-    type: 'PowerShell'
-    name: 'Install Microsoft Office 365'
-    runElevated: true
-    runAsSystem: true
-    scriptUri: '${ContainerUri}Add-O365.ps1'
+    name: 'Restart after the installation of FSLogix '
   }
 ] : []
-var OneDriveType = ImageSku == 'office-365' ? [
+var MultiSessionOs = contains(ImageSku, 'avd') || contains(ImageSku, 'evd')
+var O365ConfigHeader = '<Configuration><Add OfficeClientEdition="64" Channel="Current">'
+var O365AddOfficeHeader = InstallAccess || InstallExcel || InstallOneDriveForBusiness || InstallOneNote || InstallOutlook || InstallPowerPoint || InstallPublisher || InstallSkypeForBusiness || (InstallTeams && Environment == 'AzureCloud') || InstallWord ? '<Product ID="O365ProPlusRetail"><Language ID="en-us" />' : ''
+var O365AddAccess = InstallAccess ? '' : '<ExcludeApp ID="Access" />'
+var O365AddExcel = InstallExcel ? '' : '<ExcludeApp ID="Excel" />'
+var O365AddOneDriveForBusiness = InstallOneDriveForBusiness ? '' : '<ExcludeApp ID="Groove" />'
+var O365AddOneNote = InstallOneNote ? '' : '<ExcludeApp ID="OneNote" />'
+var O365AddOutlook = InstallOutlook ? '' : '<ExcludeApp ID="Outlook" />'
+var O365AddPowerPoint = InstallPowerPoint ? '' : '<ExcludeApp ID="PowerPoint" />'
+var O365AddPublisher = InstallPublisher ? '' : '<ExcludeApp ID="Publisher" />'
+var O365AddSkypeForBusiness = InstallSkypeForBusiness ? '' : '<ExcludeApp ID="Lync" />'
+var O365AddTeams = InstallTeams && Environment == 'AzureCloud' ? '' : '<ExcludeApp ID="Teams" />'
+var O365AddWord = InstallWord ? '' : '<ExcludeApp ID="Word" />'
+var O365AddOfficeFooter = InstallAccess || InstallExcel || InstallOneDriveForBusiness || InstallOneNote || InstallOutlook || InstallPowerPoint || InstallPublisher || InstallSkypeForBusiness || (InstallTeams && Environment == 'AzureCloud') || InstallWord ? '</Product>' : ''
+var O365AddProject = InstallProject ? '<Product ID="ProjectProRetail"><Language ID="en-us" /></Product>' : ''
+var O365AddVisio = InstallVisio ? '<Product ID="VisioProRetail"><Language ID="en-us" /></Product>' : ''
+var O365Settings = '</Add><Updates Enabled="FALSE" /><Display Level="None" AcceptEULA="TRUE" /><Property Name="FORCEAPPSHUTDOWN" Value="TRUE"/>'
+var O365SharedActivation = MultiSessionOs ? '<Property Name="SharedComputerLicensing" Value="1"/>' : ''
+var O365ConfigFooter = '</Configuration>'
+var O365Content = '${O365ConfigHeader}${O365AddOfficeHeader}${O365AddAccess}${O365AddExcel}${O365AddOneDriveForBusiness}${O365AddOneNote}${O365AddOutlook}${O365AddPowerPoint}${O365AddPublisher}${O365AddSkypeForBusiness}${O365AddTeams}${O365AddWord}${O365AddOfficeFooter}${O365AddProject}${O365AddVisio}${O365Settings}${O365SharedActivation}${O365ConfigFooter}'
+var Office = InstallAccess || InstallExcel || InstallOneDriveForBusiness || InstallOneNote || InstallOutlook || InstallPowerPoint || InstallPublisher || InstallSkypeForBusiness || (InstallTeams && Environment == 'AzureCloud') || InstallWord || InstallVisio || InstallProject ? [
   {
     type: 'PowerShell'
-    name: 'Download OneDrive'
+    name: 'Upload the Microsoft Office 365 Configuration File'
     runElevated: true
     runAsSystem: true
-    scriptUri: '${ContainerUri}Get-OneDrive.ps1'
-  }
-  {
-    type: 'File'
-    name: 'Download OneDrive Configuration File'
-    sourceUri: '${ContainerUri}tenantId.txt'
-    destination: 'C:\\temp\\tenantId.txt'
-  }
-  {
-    type: 'PowerShell'
-    name: 'Uninstall OneDrive'
-    runElevated: true
-    runAsSystem: true
-    scriptUri: '${ContainerUri}Remove-OneDrive.ps1'
-  }
-  {
-    type: 'WindowsRestart'
-    name: 'Restart after OneDrive uninstall'
-    restartTimeout: '5m'
-  }
-  {
-    type: 'PowerShell'
-    name: 'Install OneDrive'
-    runElevated: true
-    runAsSystem: true
-    scriptUri: '${ContainerUri}Add-OneDrive.ps1'
-  }
-] : [
-  {
-    type: 'PowerShell'
-    name: 'Download OneDrive'
-    runElevated: true
-    runAsSystem: true
-    scriptUri: '${ContainerUri}Get-OneDrive.ps1'
-  }
-  {
-    type: 'File'
-    name: 'Download OneDrive Configuration File'
-    sourceUri: '${ContainerUri}tenantId.txt'
-    destination: 'C:\\temp\\tenantId.txt'
+    inline: '${O365Content} | Out-File -FilePath "C:\\temp\\office365x64.xml'
   }
   {
     type: 'PowerShell'
-    name: 'Install OneDrive'
+    name: 'Download & extract the Microsoft Office 365 Deployment Toolkit'
     runElevated: true
     runAsSystem: true
-    scriptUri: '${ContainerUri}Add-OneDrive.ps1'
+    inline: '$ErrorActionPreference = "Stop"; $Installer = "C:\\temp\\office.exe"; Invoke-WebRequest -Uri "https://www.microsoft.com/en-us/download/confirmation.aspx?id=49117" -OutFile $Installer; Start-Process -FilePath $Installer -ArgumentList "/extract:C:\\temp /quiet /passive /norestart" -Wait -PassThru | Out-Null; Write-Host "Downloaded & extracted the Office 365 Deployment Toolkit";'
+  }
+  {
+    type: 'PowerShell'
+    name: 'Install the selected Microsoft Office 365 applications'
+    runElevated: true
+    runAsSystem: true
+    inline: '$ErrorActionPreference = "Stop"; Start-Process -FilePath "C:\\temp\\setup.exe" -ArgumentList "/configure C:\\temp\\office365x64.xml" -Wait -PassThru | Out-Null; Write-Host "Installed the selected Office365 applications";'
+  }
+] : []
+var Sysprep = [
+  {
+    type: 'PowerShell'
+    name: 'Update the sysprep mode on the Deprovisioning Script'
+    runElevated: true
+    runAsSystem: true
+    inline: '$ErrorActionPreference = "Stop"; $Path = "C:\\DeprovisioningScript.ps1"; ((Get-Content -Path $Path -Raw) -replace "/quit","/quit /mode:vm") | Set-Content -Path $Path'
   }
 ]
-var OneDrive = InstallOneDrive ? OneDriveType : []
-var Sysprep =  [
-  {
-    type: 'File'
-    name: 'Download custom Sysprep script'
-    sourceUri: '${ContainerUri}DeprovisioningScript.ps1'
-    destination: 'C:\\DeprovisioningScript.ps1'
-  }
-]
-var Teams = InstallTeams ? [
+var Teams = InstallTeams && Environment == 'AzureUSGovernment' ? [
   {
     type: 'PowerShell'
-    name: 'Download Teams'
+    name: 'Download & install Teams for either GCC High or DoD tenants'
     runElevated: true
     runAsSystem: true
-    scriptUri: '${ContainerUri}Get-Teams.ps1'
-  }
-  {
-    type: 'PowerShell'
-    name: 'Install Teams'
-    runElevated: true
-    runAsSystem: true
-    scriptUri: '${ContainerUri}Add-Teams.ps1'
+    inline: '$ErrorActionPreference = "Stop"; $Installers = @(@{"URL"="https://aka.ms/vs/16/release/vc_redist.x64.exe";"File"="C:\\temp\\vc_redist.x64.exe"}, @{"URL"="https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RE4AQBt";"File"="C:\\temp\\webSocketSvc.msi"}, @{"URL"=${TeamsUrl};"File"="C:\temp\teams.msi"}); foreach($Installer in $Installers){Invoke-WebRequest -Uri $Installer.URL -OutFile $Installer.File}; if(${MultiSessionOs} -eq "true"){Start-Process "reg" -ArgumentList "add HKLM\\SOFTWARE\\Microsoft\\Teams /v IsWVDEnvironment /t REG_DWORD /d 1 /f"}; Start-Process -FilePath $Installers[0].File -Args "/install /quiet /norestart /log vcdist.log" -Wait -PassThru | Out-Null; Start-Process -FilePath msiexec.exe -Args "/i $($Installers[1].File) /quiet /qn /norestart /passive /log webSocket.log" -Wait -PassThru | Out-Null; Start-Process -FilePath msiexec.exe -Args "/i $($Installers[2].File) /quiet /qn /norestart /passive /log teams.log ALLUSER=1 ALLUSERS=1" -Wait -PassThru | Out-Null;'
   }
 ] : []
 var VDOT = InstallVirtualDesktopOptimizationTool ? [
   {
     type: 'PowerShell'
-    name: 'Download the Virtual Desktop Optimization Tool'
+    name: 'Download & execute the Virtual Desktop Optimization Tool'
     runElevated: true
     runAsSystem: true
-    scriptUri: '${ContainerUri}Get-VDOT.ps1'
-  }
-  {
-    type: 'PowerShell'
-    name: 'Execute the Virtual Desktop Optimization Tool'
-    runElevated: true
-    runAsSystem: true
-    scriptUri: '${ContainerUri}Set-VDOT.ps1'
+    inline: '$ErrorActionPreference = "Stop"; $ZIP = "C:\\temp\\VDOT.zip"; Invoke-WebRequest -Uri $URL -OutFile $ZIP; Unblock-File -Path $ZIP; Expand-Archive -LiteralPath $ZIP -DestinationPath "C:\temp" -Force; $Path = (Get-ChildItem -Path "C:\temp" -Recurse | Where-Object {$_.Name -eq "Windows_VDOT.ps1"}).FullName; $Script = Get-Content -Path $Path; $ScriptUpdate = $Script -replace "Set-NetAdapterAdvancedProperty", "#Set-NetAdapterAdvancedProperty"; $ScriptUpdate | Set-Content -Path $Path; & $Path -Optimizations "AppxPackages","Autologgers","DefaultUserSettings","LGPO","NetworkOptimizations","ScheduledTasks","Services","WindowsMediaPlayer" -AdvancedOptimizations "Edge","RemoveLegacyIE" -AcceptEULA; Write-Host "Optimized the operating system using the Virtual Desktop Optimization Tool";'
   }
   {
     type: 'WindowsRestart'
-    name: 'Restart after VDOT execution'
-    restartTimeout: '5m'
+    name: 'Restart after the execution of the Virtual Desktop Optimization Tool'
   }
 ] : []
 var RemoveTempDir = [
   {
     type: 'PowerShell'
-    name: 'Remove TEMP Directory'
+    name: 'Remove the TEMP Directory'
     runElevated: true
     runAsSystem: true
     inline: [
@@ -243,12 +158,10 @@ var WindowsUpdate = [
   }
   {
     type: 'WindowsRestart'
-    name: 'Restart after Windows Updates'
-    restartTimeout: '5m'
+    name: 'Restart after the Windows Updates'
+
   }
 ]
-var Customizers = union(CreateTempDir, VDOT, Functions, FSLogix, Office, OneDrive, Teams, RemoveTempDir, WindowsUpdate, Sysprep)
-
 
 resource imageTemplate 'Microsoft.VirtualMachineImages/imageTemplates@2022-02-14' = {
   name: ImageTemplateName
@@ -257,8 +170,7 @@ resource imageTemplate 'Microsoft.VirtualMachineImages/imageTemplates@2022-02-14
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      '${UserAssignedIdentityResourceId}': {
-      }
+      '${UserAssignedIdentityResourceId}': {}
     }
   }
   properties: {
@@ -280,7 +192,7 @@ resource imageTemplate 'Microsoft.VirtualMachineImages/imageTemplates@2022-02-14
       sku: ImageSku
       version: ImageVersion
     }
-    customize: Customizers
+    customize: union(CreateTempDir, VDOT, FSLogix, Office, Teams, RemoveTempDir, WindowsUpdate, Sysprep)
     distribute: [
       {
         type: 'SharedImage'

@@ -1,13 +1,10 @@
 targetScope = 'subscription'
 
-@allowed([
-  'd' // Development
-  'p' // Production
-  's' // Shared
-  't' // Test
-])
-@description('The target environment for the solution.')
-param Environment string = 'd'
+@description('The name of the compute gallery for managing the images.')
+param ComputeGalleryName string = 'cg_aib_d_use'
+
+@description('The name of the deployment script for configuring an existing subnet.')
+param DeploymentScriptName string = 'ds-aib-d-use'
 
 @description('Any Azure polices that would affect the AIB build VM should have an exemption for the AIB staging resource group. Common examples are policies that push the Guest Configuration agent or the Microsoft Defender for Endpoint agent. Reference: https://learn.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-troubleshoot#prerequisites')
 param ExemptPolicyAssignmentIds array = [
@@ -45,48 +42,73 @@ param ImageVersion string = 'latest'
 ])
 param ImageStorageAccountType string = 'Standard_LRS'
 
+@description('The name of the image template used to build an image with AIB.')
+param ImageTemplateName string = 'it-d-va-win11-22h2-avd'
+
+@description('Determine whether you want to install Microsoft Access in the image.')
+param InstallAccess bool = true
+
+@description('Determine whether you want to install Microsoft Excel in the image.')
+param InstallExcel bool = true
+
 @description('Determine whether you want to install FSLogix in the image.')
 param InstallFSLogix bool = true
 
-@description('Determine whether you want to install Microsoft Office 365 in the image.')
-param InstallOffice bool = true
+@description('Determine whether you want to install Microsoft One Drive for Business in the image.')
+param InstallOneDriveForBusiness bool = true
 
-@description('Determine whether you want to install Microsoft One Drive in the image.')
-param InstallOneDrive bool = true
+@description('Determine whether you want to install Microsoft OneNote in the image.')
+param InstallOneNote bool = true
+
+@description('Determine whether you want to install Microsoft Outlook in the image.')
+param InstallOutlook bool = true
+
+@description('Determine whether you want to install Microsoft PowerPoint in the image.')
+param InstallPowerPoint bool = true
 
 @description('Determine whether you want to install Microsoft Project in the image.')
 param InstallProject bool = true
 
+@description('Determine whether you want to install Microsoft Publisher in the image.')
+param InstallPublisher bool = true
+
+@description('Determine whether you want to install Microsoft Skype for Business in the image.')
+param InstallSkypeForBusiness bool = true
+
 @description('Determine whether you want to install Microsoft Teams in the image.')
 param InstallTeams bool = true
 
-@description('Determine whether you want to run the Virtual Desktop Optimization Tool on the image. https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool')
+@description('Determine whether you want to execute the Virtual Desktop Optimization Tool on the image. https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool')
 param InstallVirtualDesktopOptimizationTool bool = true
 
 @description('Determine whether you want to install Microsoft Visio in the image.')
 param InstallVisio bool = true
 
+@description('Determine whether you want to install Microsoft Word in the image.')
+param InstallWord bool = true
+
 @description('The location for the resources deployed in this solution.')
 param Location string = deployment().location
 
-@description('The resource ID for an existing Private DNS Zone for Azure Blobs.')
-param ExistingPrivateDnsZoneResourceId string = ''
-
-@allowed([
-  'PrivateEndpoint'
-  'PublicEndpoint'
-  'ServiceEndpoint'
-])
-@description('Determine the type of endpoint to enable on the storage account. DNS forwarding should already be configured if choosing a private endpoint.')
-param StorageEndpoint string
+param ResourceGroupName string = 'rg-aib-d-use'
 
 @description('The subnet name of an existing virtual network.')
 param SubnetName string = 'Clients'
 
 param Tags object = {}
 
+@allowed([
+  'Commercial'
+  'DepartmentOfDefense'
+  'GovernmentCommunityCloud'
+  'GovernmentCommunityCloudHigh'
+])
+param TenantType string = 'Commercial'
+
 @description('DO NOT MODIFY THIS VALUE! The timestamp is needed to differentiate deployments for certain Azure resources and must be set using a parameter.')
 param Timestamp string = utcNow('yyyyMMddhhmmss')
+
+param UserAssignedIdentityName string = 'uai-aib-d-use'
 
 @description('The size of the virtual machine used for creating the image.  The recommendation is to use a \'Standard_D2_v2\' size or greater for AVD. https://github.com/danielsollondon/azvmimagebuilder/tree/master/solutions/14_Building_Images_WVD')
 param VirtualMachineSize string = 'Standard_D4ds_v5'
@@ -97,88 +119,6 @@ param VirtualNetworkName string = 'vnet-net-d-eu'
 @description('The resource group name of an existing virtual network. If choosing a private endpoint for the storage account, the virtual network should contain a DNS server with the appropriate conditional forwarder.')
 param VirtualNetworkResourceGroupName string = 'rg-net-d-eu'
 
-var Assets = [
-  {
-    content: O365Content
-    fileName: O365FileName
-  }
-  {
-    content: subscription().tenantId
-    fileName: 'tenantId.txt'
-  }
-  {
-    content: loadTextContent('artifacts/Add-FSLogix.ps1')
-    fileName: 'Add-FSLogix.ps1'
-  }
-  {
-    content: loadTextContent('artifacts/Add-O365.ps1')
-    fileName: 'Add-O365.ps1'
-  }
-  {
-    content: loadTextContent('artifacts/Add-OneDrive.ps1')
-    fileName: 'Add-OneDrive.ps1'
-  }
-  {
-    content: loadTextContent('artifacts/Add-Teams.ps1')
-    fileName: 'Add-Teams.ps1'
-  }
-  {
-    content: loadTextContent('artifacts/DeprovisioningScript.ps1')
-    fileName: 'DeprovisioningScript.ps1'
-  }
-  {
-    content: loadTextContent('artifacts/Get-FSLogix.ps1')
-    fileName: 'Get-FSLogix.ps1'
-  }
-  {
-    content: loadTextContent('artifacts/Get-O365.ps1')
-    fileName: 'Get-O365.ps1'
-  }
-  {
-    content: loadTextContent('artifacts/Get-OneDrive.ps1')
-    fileName: 'Get-OneDrive.ps1'
-  }
-  {
-    content: loadTextContent('artifacts/Get-Teams.ps1')
-    fileName: 'Get-Teams.ps1'
-  }
-  {
-    content: loadTextContent('artifacts/Get-VDOT.ps1')
-    fileName: 'Get-VDOT.ps1'
-  }
-  {
-    content: loadTextContent('artifacts/Remove-FSLogix.ps1')
-    fileName: 'Remove-FSLogix.ps1'
-  }
-  {
-    content: loadTextContent('artifacts/Remove-OneDrive.ps1')
-    fileName: 'Remove-OneDrive.ps1'
-  }
-  {
-    content: loadTextContent('artifacts/Set-RegistrySetting.ps1')
-    fileName: 'Set-RegistrySetting.ps1'
-  }
-  {
-    content: loadTextContent('artifacts/Set-VDOT.ps1')
-    fileName: 'Set-VDOT.ps1'
-  }
-]
-var ContainerName = 'artifacts'
-var ContainerUri = 'https://${StorageAccountName}.blob.${StorageSuffix}/${ContainerName}/'
-var DeploymentScriptName = 'ds-${NamingStandard}'
-var ImageTemplateName = 'it-${toLower(ImageDefinitionName)}-${Environment}-${LocationShortName}'
-var LocationShortName = Locations[Location].acronym
-var Locations = loadJsonContent('artifacts/locations.json')
-var NamingStandard = 'aib-${Environment}-${LocationShortName}'
-var O365FileName = 'office365x64.xml'
-var O365ConfigHeader = '<Configuration><Add OfficeClientEdition="64" Channel="Current">'
-var O365AddOffice = InstallOffice ? '<Product ID="O365ProPlusRetail"><Language ID="en-us" /></Product>' : ''
-var O365AddProject = InstallProject ? '<Product ID="ProjectProRetail"><Language ID="en-us" /></Product>' : ''
-var O365AddVisio = InstallVisio ? '<Product ID="VisioProRetail"><Language ID="en-us" /></Product>' : ''
-var O365ConfigFooter = '</Add><Updates Enabled="FALSE" /><Display Level="None" AcceptEULA="TRUE" /><Property Name="FORCEAPPSHUTDOWN" Value="TRUE"/><Property Name="SharedComputerLicensing" Value="1"/></Configuration>'
-var O365Content = '${O365ConfigHeader}${O365AddOffice}${O365AddProject}${O365AddVisio}${O365ConfigFooter}'
-var PrivateDnsZoneName = 'privatelink.blob.${StorageSuffix}'
-var ResourceGroup = 'rg-${NamingStandard}'
 var Roles = [
   {
     resourceGroup: VirtualNetworkResourceGroupName
@@ -196,7 +136,7 @@ var Roles = [
     ]
   }
   {
-    resourceGroup: ResourceGroup
+    resourceGroup: ResourceGroupName
     name: 'Image Template Contributor'
     description: 'Allow the creation and management of images'
     permissions: [
@@ -214,12 +154,19 @@ var Roles = [
     ]
   }
 ]
-var StagingResourceGroupName = 'rg-aib-${Environment}-${LocationShortName}-staging-${toLower(ImageDefinitionName)}'
-var StorageAccountName = 'saaib${Environment}${LocationShortName}'
-var StorageSuffix = environment().suffixes.storage
+var StagingResourceGroupName = '${ResourceGroupName}-staging-${ImageSku}'
+var TeamsUrl = TeamsUrls[TenantType]
+
+// https://learn.microsoft.com/en-us/deployoffice/teams-install
+var TeamsUrls = {
+  Commercial: 'https://teams.microsoft.com/downloads/desktopurl?env=production&plat=windows&arch=x64&managedInstaller=true&download=true'
+  DepartmentOfDefense: 'https://dod.teams.microsoft.us/downloads/desktopurl?env=production&plat=windows&arch=x64&managedInstaller=true&download=true'
+  GovernmentCommunityCloud: 'https://teams.microsoft.com/downloads/desktopurl?env=production&plat=windows&arch=x64&managedInstaller=true&ring=general_gcc&download=true'
+  GovernmentCommunityCloudHigh: 'https://gov.teams.microsoft.us/downloads/desktopurl?env=production&plat=windows&arch=x64&managedInstaller=true&download=true'
+}
 
 resource rg 'Microsoft.Resources/resourceGroups@2019-10-01' = {
-  name: ResourceGroup
+  name: ResourceGroupName
   location: Location
   tags: Tags
   properties: {}
@@ -241,15 +188,14 @@ module userAssignedIdentity 'modules/userAssignedIdentity.bicep' = {
   name: 'UserAssignedIdentity_${Timestamp}'
   scope: rg
   params: {
-    Environment: Environment
     Location: Location
-    LocationShortName: LocationShortName
+    Name: UserAssignedIdentityName
     Tags: Tags
   }
 }
 
 @batchSize(1)
-module roleAssignments 'modules/roleAssignments.bicep' = [for i in range(0, length(Roles)): {
+module roleAssignments 'modules/roleAssignment.bicep' = [for i in range(0, length(Roles)): {
   name: 'RoleAssignments_${i}_${Timestamp}'
   scope: resourceGroup(Roles[i].resourceGroup)
   params: {
@@ -258,39 +204,17 @@ module roleAssignments 'modules/roleAssignments.bicep' = [for i in range(0, leng
   }
 }]
 
-module storageAccount 'modules/storageAccount.bicep' = {
-  scope: rg
-  name: 'StorageAccount_${Timestamp}'
-  params: {
-    Assets: Assets
-    ContainerName: ContainerName
-    DeploymentScriptName: DeploymentScriptName
-    ExistingPrivateDnsZoneResourceId: ExistingPrivateDnsZoneResourceId
-    Location: Location
-    PrivateDnsZoneName: PrivateDnsZoneName
-    StorageAccountName: StorageAccountName
-    StorageEndpoint: StorageEndpoint
-    SubnetName: SubnetName
-    Tags: Tags
-    Timestamp: Timestamp
-    UserAssignedIdentityPrincipalId: userAssignedIdentity.outputs.PrincipalId
-    VirtualNetworkName: VirtualNetworkName
-    VirtualNetworkResourceGroupName: VirtualNetworkResourceGroupName
-  }
-}
-
 module computeGallery 'modules/computeGallery.bicep' = {
   name: 'ComputeGallery_${Timestamp}'
   scope: rg
   params: {
-    Environment: Environment
+    ComputeGalleryName: ComputeGalleryName
     ImageDefinitionName: ImageDefinitionName
     ImageDefinitionSecurityType: ImageDefinitionSecurityType
     ImageOffer: ImageOffer
     ImagePublisher: ImagePublisher
     ImageSku: ImageSku
     Location: Location
-    LocationShortName: LocationShortName
     Tags: Tags
   }
 }
@@ -299,9 +223,8 @@ module networkPolicy 'modules/networkPolicy.bicep' = if (!(empty(SubnetName)) &&
   name: 'NetworkPolicy_${Timestamp}'
   scope: rg
   params: {
-    Environment: Environment
+    DeploymentScriptName: DeploymentScriptName
     Location: Location
-    LocationShortName: LocationShortName
     SubnetName: SubnetName
     Tags: Tags
     Timestamp: Timestamp
@@ -318,14 +241,6 @@ module imageTemplate 'modules/imageTemplate.bicep' = {
   name: 'ImageTemplate_${Timestamp}'
   scope: rg
   params: {
-    ContainerUri: ContainerUri
-    InstallFSLogix: InstallFSLogix
-    InstallOffice: InstallOffice
-    InstallOneDrive: InstallOneDrive
-    InstallProject: InstallProject
-    InstallTeams: InstallTeams
-    InstallVirtualDesktopOptimizationTool: InstallVirtualDesktopOptimizationTool
-    InstallVisio: InstallVisio
     ImageDefinitionResourceId: computeGallery.outputs.ImageDefinitionResourceId
     ImageOffer: ImageOffer
     ImagePublisher: ImagePublisher
@@ -333,10 +248,25 @@ module imageTemplate 'modules/imageTemplate.bicep' = {
     ImageStorageAccountType: ImageStorageAccountType
     ImageTemplateName: ImageTemplateName
     ImageVersion: ImageVersion
+    InstallAccess: InstallAccess
+    InstallExcel: InstallExcel
+    InstallFSLogix: InstallFSLogix
+    InstallOneDriveForBusiness: InstallOneDriveForBusiness
+    InstallOneNote: InstallOneNote
+    InstallOutlook: InstallOutlook
+    InstallPowerPoint: InstallPowerPoint
+    InstallProject: InstallProject
+    InstallPublisher: InstallPublisher
+    InstallSkypeForBusiness: InstallSkypeForBusiness
+    InstallTeams: InstallTeams
+    InstallVirtualDesktopOptimizationTool: InstallVirtualDesktopOptimizationTool
+    InstallVisio: InstallVisio
+    InstallWord: InstallWord
     Location: Location
     StagingResourceGroupName: StagingResourceGroupName
     SubnetName: SubnetName
     Tags: Tags
+    TeamsUrl: TeamsUrl
     Timestamp: Timestamp
     UserAssignedIdentityResourceId: userAssignedIdentity.outputs.ResourceId
     VirtualMachineSize: VirtualMachineSize
@@ -346,7 +276,6 @@ module imageTemplate 'modules/imageTemplate.bicep' = {
   dependsOn: [
     networkPolicy
     roleAssignments
-    storageAccount
   ]
 }
 
