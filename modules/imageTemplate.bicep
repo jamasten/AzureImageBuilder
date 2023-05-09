@@ -262,9 +262,9 @@ resource imageTemplate 'Microsoft.VirtualMachineImages/imageTemplates@2022-02-14
     stagingResourceGroup: '/subscriptions/${subscription().subscriptionId}/resourceGroups/${StagingResourceGroupName}'
     buildTimeoutInMinutes: 300
     vmProfile: {
-      userAssignedIdentities: [
+      /*userAssignedIdentities: [
         UserAssignedIdentityResourceId
-      ]
+      ] */
       vmSize: VirtualMachineSize
       vnetConfig: !empty(SubnetName) ? {
         subnetId: resourceId(VirtualNetworkResourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', VirtualNetworkName, SubnetName)

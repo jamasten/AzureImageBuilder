@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.17.1.54307",
-      "templateHash": "14089204688905451055"
+      "templateHash": "10040022923939371515"
     }
   },
   "parameters": {
@@ -792,7 +792,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.17.1.54307",
-              "templateHash": "13647860019829328139"
+              "templateHash": "2400297882153207996"
             }
           },
           "parameters": {
@@ -986,9 +986,6 @@
                 "stagingResourceGroup": "[format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('StagingResourceGroupName'))]",
                 "buildTimeoutInMinutes": 300,
                 "vmProfile": {
-                  "userAssignedIdentities": [
-                    "[parameters('UserAssignedIdentityResourceId')]"
-                  ],
                   "vmSize": "[parameters('VirtualMachineSize')]",
                   "vnetConfig": "[if(not(empty(parameters('SubnetName'))), createObject('subnetId', resourceId(parameters('VirtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('VirtualNetworkName'), parameters('SubnetName'))), null())]"
                 },
