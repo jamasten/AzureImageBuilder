@@ -4,23 +4,24 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.16.2.56959",
-      "templateHash": "9390605764863033030"
+      "version": "0.17.1.54307",
+      "templateHash": "17477788018640135713"
     }
   },
   "parameters": {
-    "Environment": {
+    "ComputeGalleryName": {
       "type": "string",
-      "defaultValue": "d",
+      "defaultValue": "cg_aib_d_use",
       "metadata": {
-        "description": "The target environment for the solution."
-      },
-      "allowedValues": [
-        "d",
-        "p",
-        "s",
-        "t"
-      ]
+        "description": "The name of the compute gallery for managing the images."
+      }
+    },
+    "DeploymentScriptName": {
+      "type": "string",
+      "defaultValue": "ds-aib-d-use",
+      "metadata": {
+        "description": "The name of the deployment script for configuring an existing subnet."
+      }
     },
     "ExemptPolicyAssignmentIds": {
       "type": "array",
@@ -90,6 +91,27 @@
         "description": "The storage SKU for the image version replica in the Shared Image Gallery."
       }
     },
+    "ImageTemplateName": {
+      "type": "string",
+      "defaultValue": "it-d-va-win11-22h2-avd",
+      "metadata": {
+        "description": "The name of the image template used to build an image with AIB."
+      }
+    },
+    "InstallAccess": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Determine whether you want to install Microsoft Access in the image."
+      }
+    },
+    "InstallExcel": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Determine whether you want to install Microsoft Excel in the image."
+      }
+    },
     "InstallFSLogix": {
       "type": "bool",
       "defaultValue": true,
@@ -97,18 +119,32 @@
         "description": "Determine whether you want to install FSLogix in the image."
       }
     },
-    "InstallOffice": {
+    "InstallOneDriveForBusiness": {
       "type": "bool",
       "defaultValue": true,
       "metadata": {
-        "description": "Determine whether you want to install Microsoft Office 365 in the image."
+        "description": "Determine whether you want to install Microsoft One Drive for Business in the image."
       }
     },
-    "InstallOneDrive": {
+    "InstallOneNote": {
       "type": "bool",
       "defaultValue": true,
       "metadata": {
-        "description": "Determine whether you want to install Microsoft One Drive in the image."
+        "description": "Determine whether you want to install Microsoft OneNote in the image."
+      }
+    },
+    "InstallOutlook": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Determine whether you want to install Microsoft Outlook in the image."
+      }
+    },
+    "InstallPowerPoint": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Determine whether you want to install Microsoft PowerPoint in the image."
       }
     },
     "InstallProject": {
@@ -116,6 +152,20 @@
       "defaultValue": true,
       "metadata": {
         "description": "Determine whether you want to install Microsoft Project in the image."
+      }
+    },
+    "InstallPublisher": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Determine whether you want to install Microsoft Publisher in the image."
+      }
+    },
+    "InstallSkypeForBusiness": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Determine whether you want to install Microsoft Skype for Business in the image."
       }
     },
     "InstallTeams": {
@@ -129,7 +179,7 @@
       "type": "bool",
       "defaultValue": true,
       "metadata": {
-        "description": "Determine whether you want to run the Virtual Desktop Optimization Tool on the image. https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool"
+        "description": "Determine whether you want to execute the Virtual Desktop Optimization Tool on the image. https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool"
       }
     },
     "InstallVisio": {
@@ -139,6 +189,13 @@
         "description": "Determine whether you want to install Microsoft Visio in the image."
       }
     },
+    "InstallWord": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Determine whether you want to install Microsoft Word in the image."
+      }
+    },
     "Location": {
       "type": "string",
       "defaultValue": "[deployment().location]",
@@ -146,23 +203,9 @@
         "description": "The location for the resources deployed in this solution."
       }
     },
-    "ExistingPrivateDnsZoneResourceId": {
+    "ResourceGroupName": {
       "type": "string",
-      "defaultValue": "",
-      "metadata": {
-        "description": "The resource ID for an existing Private DNS Zone for Azure Blobs."
-      }
-    },
-    "StorageEndpoint": {
-      "type": "string",
-      "metadata": {
-        "description": "Determine the type of endpoint to enable on the storage account. DNS forwarding should already be configured if choosing a private endpoint."
-      },
-      "allowedValues": [
-        "PrivateEndpoint",
-        "PublicEndpoint",
-        "ServiceEndpoint"
-      ]
+      "defaultValue": "rg-aib-d-use"
     },
     "SubnetName": {
       "type": "string",
@@ -175,12 +218,26 @@
       "type": "object",
       "defaultValue": {}
     },
+    "TenantType": {
+      "type": "string",
+      "defaultValue": "Commercial",
+      "allowedValues": [
+        "Commercial",
+        "DepartmentOfDefense",
+        "GovernmentCommunityCloud",
+        "GovernmentCommunityCloudHigh"
+      ]
+    },
     "Timestamp": {
       "type": "string",
       "defaultValue": "[utcNow('yyyyMMddhhmmss')]",
       "metadata": {
         "description": "DO NOT MODIFY THIS VALUE! The timestamp is needed to differentiate deployments for certain Azure resources and must be set using a parameter."
       }
+    },
+    "UserAssignedIdentityName": {
+      "type": "string",
+      "defaultValue": "uai-aib-d-use"
     },
     "VirtualMachineSize": {
       "type": "string",
@@ -205,374 +262,6 @@
     }
   },
   "variables": {
-    "$fxv#0": "# Install FSLogix silently on a Windows x64 operating system\r\n$ErrorActionPreference = 'Stop'\r\ntry \r\n{\r\n    Start-Process -FilePath 'C:\\temp\\fslogix\\x64\\Release\\FSLogixAppsSetup.exe' -ArgumentList \"/install /quiet /norestart\" -Wait -PassThru | Out-Null\r\n    Write-Host 'Installed FSLogix'\r\n}\r\ncatch \r\n{\r\n    Write-Host $_\r\n    throw\r\n}",
-    "$fxv#1": "# Install Office 365 in per-machine mode on a Windows x64 multi-session operating system\r\n$ErrorActionPreference = 'Stop'\r\ntry \r\n{\r\n    Start-Process -FilePath 'C:\\temp\\setup.exe' -ArgumentList \"/configure C:\\temp\\office365x64.xml\" -Wait -PassThru | Out-Null\r\n    Write-Host 'Installed Office 365'\r\n\r\n    # Mount the default user registry hive\r\n    Start-Process 'reg' -ArgumentList 'load HKU\\TempDefault C:\\Users\\Default\\NTUSER.DAT' -Wait -PassThru  | Out-Null\r\n    Write-Host 'Mounted the default user registry hive'\r\n\r\n    # Configure default behavior for Office\r\n    Start-Process 'reg' -ArgumentList 'add \"HKU\\TempDefault\\SOFTWARE\\Policies\\Microsoft\\office\\16.0\\common\" /v InsiderSlabBehavior /t REG_DWORD /d 2 /f' -Wait -PassThru  | Out-Null\r\n    Start-Process 'reg' -ArgumentList 'add \"HKU\\TempDefault\\software\\policies\\microsoft\\office\\16.0\\outlook\\cached mode\" /v enable /t REG_DWORD /d 1 /f' -Wait -PassThru  | Out-Null\r\n    Start-Process 'reg' -ArgumentList 'add \"HKU\\TempDefault\\software\\policies\\microsoft\\office\\16.0\\outlook\\cached mode\" /v syncwindowsetting /t REG_DWORD /d 1 /f' -Wait -PassThru  | Out-Null\r\n    Start-Process 'reg' -ArgumentList 'add \"HKU\\TempDefault\\software\\policies\\microsoft\\office\\16.0\\outlook\\cached mode\" /v CalendarSyncWindowSetting /t REG_DWORD /d 1 /f' -Wait -PassThru  | Out-Null\r\n    Start-Process 'reg' -ArgumentList 'add \"HKU\\TempDefault\\software\\policies\\microsoft\\office\\16.0\\outlook\\cached mode\" /v CalendarSyncWindowSettingMonths  /t REG_DWORD /d 1 /f' -Wait -PassThru  | Out-Null\r\n    Write-Host 'Configured default behavior for Office'\r\n\r\n    #Unmount the default user registry hive\r\n    Start-Process 'reg' -ArgumentList 'unload HKU\\TempDefault' -Wait -PassThru  | Out-Null\r\n    Write-Host 'Unmounted the default user registry hive'\r\n\r\n    # Set the Office Update UI behavior.\r\n    Start-Process 'reg' -ArgumentList 'add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\office\\16.0\\common\\officeupdate\" /v hideupdatenotifications /t REG_DWORD /d 1 /f' -Wait -PassThru  | Out-Null\r\n    Start-Process 'reg' -ArgumentList 'add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\office\\16.0\\common\\officeupdate\" /v hideenabledisableupdates /t REG_DWORD /d 1 /f' -Wait -PassThru  | Out-Null\r\n    Write-Host 'Set the default update behavior for Office'\r\n}\r\ncatch \r\n{\r\n    Write-Host $_\r\n    throw\r\n}",
-    "$fxv#10": "# Uninstall FSLogix on a Windows x64 operating system\r\n$ErrorActionPreference = 'Stop'\r\ntry \r\n{\r\n    # Uninstall FSLogix silently\r\n    Start-Process -FilePath 'C:\\temp\\fslogix\\x64\\Release\\FSLogixAppsSetup.exe' -ArgumentList \"/uninstall /quiet /norestart\" -Wait -PassThru | Out-Null\r\n    Write-Host 'Uninstalled an existing installation of FSLogix'\r\n}\r\ncatch \r\n{\r\n    Write-Host $_\r\n    throw\r\n}",
-    "$fxv#11": "# Install OneDrive on a Windows multi-session operating system\r\n# This script was developed to install OneDrive using Azure Image Builder\r\n\r\n$ErrorActionPreference = 'Stop'\r\n\r\ntry \r\n{\r\n    # Uninstall existing OneDrive install\r\n    $Installer = 'C:\\temp\\OneDrive.exe'\r\n    Start-Process -FilePath $Installer -Args \"/uninstall\" -Wait -PassThru | Out-Null\r\n    Write-Host 'Uninstalled existing installation of OneDrive'\r\n}\r\ncatch \r\n{\r\n    Write-Host $_\r\n    throw\r\n}",
-    "$fxv#12": "Param(\r\n    [parameter(Mandatory)]\r\n    [String]$Name,\r\n\r\n    [parameter(Mandatory)]\r\n    [String]$Path,\r\n\r\n    [parameter(Mandatory)]\r\n    [String]$PropertyType,\r\n\r\n    [parameter(Mandatory)]\r\n    [String]$Value\r\n)\r\n\r\n# Create registry key(s) if necessary\r\nif(!(Test-Path -Path $Path))\r\n{\r\n    New-Item -Path $Path -Force | Out-Null\r\n}\r\n\r\n# Checks for existing registry setting\r\n$Setting = Get-ItemProperty -Path $Path -Name $Name -ErrorAction 'SilentlyContinue'\r\n$LogOutputValue = 'Path: ' + $Path + ', Name: ' + $Name + ', PropertyType: ' + $PropertyType + ', Value: ' + $Value\r\n\r\n# Creates the registry setting when it does not exist\r\nif(!$Setting)\r\n{\r\n    New-ItemProperty -Path $Path -Name $Name -PropertyType $PropertyType -Value $Value -Force | Out-Null\r\n    Write-Host \"Added registry setting: $LogOutputValue\"\r\n}\r\n# Updates the registry setting when it already exists\r\nelseif($Setting.$($Name) -ne $Value)\r\n{\r\n    Set-ItemProperty -Path $Path -Name $Name -Value $Value -Force | Out-Null\r\n    Write-Host \"Updated registry setting: $LogOutputValue\"\r\n}\r\n# Writes log output when registry setting has the correct value\r\nelse \r\n{\r\n    Write-Host \"Registry setting exists with correct value: $LogOutputValue\"  \r\n}\r\nStart-Sleep -Seconds 1",
-    "$fxv#13": "# Execute the Virtual Desktop Optimization Tool (VDOT)\r\n# https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool\r\n$ErrorActionPreference = 'Stop'\r\ntry\r\n{\r\n    # Set Exectuion Policy\r\n    Set-ExecutionPolicy -ExecutionPolicy 'RemoteSigned' -Scope 'Process'\r\n    Write-Host 'Set the Execution Policy'\r\n\r\n    # Disable the \"Configuring Network Adapter Buffer Size\" configuration\r\n    $Path = 'C:\\temp\\Virtual-Desktop-Optimization-Tool-main\\Windows_VDOT.ps1'\r\n    $Script = Get-Content -Path $Path\r\n    $ScriptUpdate = $Script -replace 'Set-NetAdapterAdvancedProperty', '#Set-NetAdapterAdvancedProperty'\r\n    $ScriptUpdate | Set-Content -Path $Path\r\n    Write-Host 'Disabled the \"Configuring Network Adapter Buffer Size\" configuration'\r\n\r\n    # Run VDOT\r\n    & C:\\temp\\Virtual-Desktop-Optimization-Tool-main\\Windows_VDOT.ps1 -Optimizations 'AppxPackages','Autologgers','DefaultUserSettings','LGPO','NetworkOptimizations','ScheduledTasks','Services','WindowsMediaPlayer' -AdvancedOptimizations 'Edge','RemoveLegacyIE' -AcceptEULA\r\n    Write-Host 'Optimized the operating system using the Virtual Desktop Optimization Tool'\r\n}\r\ncatch \r\n{\r\n    Write-Host $_\r\n    throw\r\n}",
-    "$fxv#14": {
-      "australiacentral": {
-        "acronym": "auc",
-        "timeDifference": "+10:00",
-        "timeZone": "AUS Eastern Standard Time"
-      },
-      "australiacentral2": {
-        "acronym": "auc2",
-        "timeDifference": "+10:00",
-        "timeZone": "AUS Eastern Standard Time"
-      },
-      "australiaeast": {
-        "acronym": "aue",
-        "timeDifference": "+10:00",
-        "timeZone": "AUS Eastern Standard Time"
-      },
-      "australiasoutheast": {
-        "acronym": "ause",
-        "timeDifference": "+10:00",
-        "timeZone": "AUS Eastern Standard Time"
-      },
-      "brazilsouth": {
-        "acronym": "brs",
-        "timeDifference": "-3:00",
-        "timeZone": "E. South America Standard Time"
-      },
-      "brazilsoutheast": {
-        "acronym": "brse",
-        "timeDifference": "-3:00",
-        "timeZone": "E. South America Standard Time"
-      },
-      "canadacentral": {
-        "acronym": "cac",
-        "timeDifference": "-5:00",
-        "timeZone": "Eastern Standard Time"
-      },
-      "canadaeast": {
-        "acronym": "cae",
-        "timeDifference": "-5:00",
-        "timeZone": "Eastern Standard Time"
-      },
-      "centralindia": {
-        "acronym": "inc",
-        "timeDifference": "+5:30",
-        "timeZone": "India Standard Time"
-      },
-      "centralus": {
-        "acronym": "usc",
-        "timeDifference": "-6:00",
-        "timeZone": "Central Standard Time"
-      },
-      "chinaeast": {
-        "acronym": "cne",
-        "timeDifference": "+8:00",
-        "timeZone": "China Standard Time"
-      },
-      "chinaeast2": {
-        "acronym": "cne2",
-        "timeDifference": "+8:00",
-        "timeZone": "China Standard Time"
-      },
-      "chinanorth": {
-        "acronym": "cnn",
-        "timeDifference": "+8:00",
-        "timeZone": "China Standard Time"
-      },
-      "chinanorth2": {
-        "acronym": "cnn2",
-        "timeDifference": "+8:00",
-        "timeZone": "China Standard Time"
-      },
-      "eastasia": {
-        "acronym": "ase",
-        "timeDifference": "+8:00",
-        "timeZone": "China Standard Time"
-      },
-      "eastus": {
-        "acronym": "use",
-        "timeDifference": "-5:00",
-        "timeZone": "Eastern Standard Time"
-      },
-      "eastus2": {
-        "acronym": "use2",
-        "timeDifference": "-5:00",
-        "timeZone": "Eastern Standard Time"
-      },
-      "francecentral": {
-        "acronym": "frc",
-        "timeDifference": "+1:00",
-        "timeZone": "Central Europe Standard Time"
-      },
-      "francesouth": {
-        "acronym": "frs",
-        "timeDifference": "+1:00",
-        "timeZone": "Central Europe Standard Time"
-      },
-      "germanynorth": {
-        "acronym": "den",
-        "timeDifference": "+1:00",
-        "timeZone": "Central Europe Standard Time"
-      },
-      "germanywestcentral": {
-        "acronym": "dewc",
-        "timeDifference": "+1:00",
-        "timeZone": "Central Europe Standard Time"
-      },
-      "japaneast": {
-        "acronym": "jpe",
-        "timeDifference": "+9:00",
-        "timeZone": "Tokyo Standard Time"
-      },
-      "japanwest": {
-        "acronym": "jpw",
-        "timeDifference": "+9:00",
-        "timeZone": "Tokyo Standard Time"
-      },
-      "jioindiacentral": {
-        "acronym": "injc",
-        "timeDifference": "+5:30",
-        "timeZone": "India Standard Time"
-      },
-      "jioindiawest": {
-        "acronym": "injw",
-        "timeDifference": "+5:30",
-        "timeZone": "India Standard Time"
-      },
-      "koreacentral": {
-        "acronym": "krc",
-        "timeDifference": "+9:00",
-        "timeZone": "Korea Standard Time"
-      },
-      "koreasouth": {
-        "acronym": "krs",
-        "timeDifference": "+9:00",
-        "timeZone": "Korea Standard Time"
-      },
-      "northcentralus": {
-        "acronym": "usnc",
-        "timeDifference": "-6:00",
-        "timeZone": "Central Standard Time"
-      },
-      "northeurope": {
-        "acronym": "eun",
-        "timeDifference": "0:00",
-        "timeZone": "GMT Standard Time"
-      },
-      "norwayeast": {
-        "acronym": "noe",
-        "timeDifference": "+1:00",
-        "timeZone": "Central Europe Standard Time"
-      },
-      "norwaywest": {
-        "acronym": "now",
-        "timeDifference": "+1:00",
-        "timeZone": "Central Europe Standard Time"
-      },
-      "southafricanorth": {
-        "acronym": "zan",
-        "timeDifference": "+2:00",
-        "timeZone": "South Africa Standard Time"
-      },
-      "southafricawest": {
-        "acronym": "zaw",
-        "timeDifference": "+2:00",
-        "timeZone": "South Africa Standard Time"
-      },
-      "southcentralus": {
-        "acronym": "ussc",
-        "timeDifference": "-6:00",
-        "timeZone": "Central Standard Time"
-      },
-      "southeastasia": {
-        "acronym": "asse",
-        "timeDifference": "+8:00",
-        "timeZone": "Singapore Standard Time"
-      },
-      "southindia": {
-        "acronym": "ins",
-        "timeDifference": "+5:30",
-        "timeZone": "India Standard Time"
-      },
-      "swedencentral": {
-        "acronym": "sec",
-        "timeDifference": "+1:00",
-        "timeZone": "Central Europe Standard Time"
-      },
-      "switzerlandnorth": {
-        "acronym": "chn",
-        "timeDifference": "+1:00",
-        "timeZone": "Central Europe Standard Time"
-      },
-      "switzerlandwest": {
-        "acronym": "chw",
-        "timeDifference": "+1:00",
-        "timeZone": "Central Europe Standard Time"
-      },
-      "uaecentral": {
-        "acronym": "aec",
-        "timeDifference": "+3:00",
-        "timeZone": "Arabian Standard Time"
-      },
-      "uaenorth": {
-        "acronym": "aen",
-        "timeDifference": "+3:00",
-        "timeZone": "Arabian Standard Time"
-      },
-      "uksouth": {
-        "acronym": "uks",
-        "timeDifference": "0:00",
-        "timeZone": "GMT Standard Time"
-      },
-      "ukwest": {
-        "acronym": "ukw",
-        "timeDifference": "0:00",
-        "timeZone": "GMT Standard Time"
-      },
-      "usdodcentral": {
-        "acronym": "dodc",
-        "timeDifference": "-6:00",
-        "timeZone": "Central Standard Time"
-      },
-      "usdodeast": {
-        "acronym": "dode",
-        "timeDifference": "-5:00",
-        "timeZone": "Eastern Standard Time"
-      },
-      "usgovarizona": {
-        "acronym": "az",
-        "timeDifference": "-7:00",
-        "timeZone": "Mountain Standard Time"
-      },
-      "usgovtexas": {
-        "acronym": "tx",
-        "timeDifference": "-6:00",
-        "timeZone": "Central Standard Time"
-      },
-      "usgovvirginia": {
-        "acronym": "va",
-        "timeDifference": "-5:00",
-        "timeZone": "Eastern Standard Time"
-      },
-      "westcentralus": {
-        "acronym": "uswc",
-        "timeDifference": "-7:00",
-        "timeZone": "Mountain Standard Time"
-      },
-      "westeurope": {
-        "acronym": "euw",
-        "timeDifference": "+1:00",
-        "timeZone": "Central Europe Standard Time"
-      },
-      "westindia": {
-        "acronym": "inw",
-        "timeDifference": "+5:30",
-        "timeZone": "India Standard Time"
-      },
-      "westus": {
-        "acronym": "usw",
-        "timeDifference": "-8:00",
-        "timeZone": "Pacific Standard Time"
-      },
-      "westus2": {
-        "acronym": "usw2",
-        "timeDifference": "-8:00",
-        "timeZone": "Pacific Standard Time"
-      },
-      "westus3": {
-        "acronym": "usw3",
-        "timeDifference": "-7:00",
-        "timeZone": "Mountain Standard Time"
-      }
-    },
-    "$fxv#2": "# Install OneDrive on a Windows multi-session operating system\r\n$ErrorActionPreference = 'Stop'\r\ntry \r\n{\r\n    # Set \"All User Install\" registry setting\r\n    & C:\\temp\\Set-RegistrySetting.ps1 -Name 'AllUsersInstall' -Path 'HKLM:\\Software\\Microsoft\\OneDrive' -PropertyType 'DWord' -Value '1'\r\n\r\n    # Install OneDrive is per-machine mode\r\n    Start-Process -FilePath 'C:\\temp\\OneDrive.exe' -Args \"/allusers\" -Wait -PassThru | Out-Null\r\n    Write-Host 'Installed OneDrive in per-machine mode'\r\n\r\n    # Set \"Start at Sign-In\" registry setting\r\n    & C:\\temp\\Set-RegistrySetting.ps1 -Name 'OneDrive' -Path 'HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -PropertyType 'String' -Value 'C:\\Program Files (x86)\\Microsoft OneDrive\\OneDrive.exe /background'\r\n\r\n    # Set \"Silently configure user account\" registry setting\r\n    & C:\\temp\\Set-RegistrySetting.ps1 -Name 'SilentAccountConfig' -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\OneDrive' -PropertyType 'DWord' -Value '1'\r\n\r\n    # Set \"Redirect & move known folders\" registry setting\r\n    $AzureADTenantID = Get-Content -Path 'C:\\temp\\tenantId.txt'\r\n    & C:\\temp\\Set-RegistrySetting.ps1 -Name 'KFMSilentOptIn' -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\OneDrive' -PropertyType 'String' -Value \"$AzureADTenantID\"\r\n}\r\ncatch \r\n{\r\n    Write-Host $_\r\n    throw\r\n}",
-    "$fxv#3": "# Install Teams in per-machine mode for Windows multi-session operating systems\r\n$ErrorActionPreference = 'Stop'\r\ntry \r\n{\r\n    # Set registry setting for AVD Media Optimization\r\n    & C:\\temp\\Set-RegistrySetting.ps1 -Name 'IsWVDEnvironment' -Path 'HKLM:\\SOFTWARE\\Microsoft\\Teams' -PropertyType 'Dword' -Value '1'\r\n\r\n    # Install Visual C++\r\n    $File = 'C:\\temp\\vc_redist.x64.exe'\r\n    Start-Process -FilePath $File -Args \"/install /quiet /norestart /log vcdist.log\" -Wait -PassThru | Out-Null\r\n    Write-Host 'Installed Visual C++'\r\n\r\n    # Install Teams WebSocket Service\r\n    $File = 'C:\\temp\\webSocketSvc.msi'\r\n    Start-Process -FilePath msiexec.exe -Args \"/i $File /quiet /qn /norestart /passive /log webSocket.log\" -Wait -PassThru | Out-Null\r\n    Write-Host 'Installed the Teams WebSocket service'\r\n\r\n    # Install Teams\r\n    $File = 'C:\\temp\\teams.msi'\r\n    Start-Process -FilePath msiexec.exe -Args \"/i $File /quiet /qn /norestart /passive /log teams.log ALLUSER=1 ALLUSERS=1\" -Wait -PassThru | Out-Null\r\n    Write-Host 'Installed Teams'\r\n}\r\ncatch \r\n{\r\n    Write-Host $_\r\n    throw\r\n}",
-    "$fxv#4": "Write-Output '>>> Waiting for GA Service (RdAgent) to start ...'\r\nwhile ((Get-Service RdAgent).Status -ne 'Running') { Start-Sleep -s 5 }\r\nWrite-Output '>>> Waiting for GA Service (WindowsAzureTelemetryService) to start ...'\r\nwhile ((Get-Service WindowsAzureTelemetryService) -and ((Get-Service WindowsAzureTelemetryService).Status -ne 'Running')) { Start-Sleep -s 5 }\r\nWrite-Output '>>> Waiting for GA Service (WindowsAzureGuestAgent) to start ...'\r\nwhile ((Get-Service WindowsAzureGuestAgent).Status -ne 'Running') { Start-Sleep -s 5 }\r\nWrite-Output '>>> Sysprepping VM ...'\r\nif( Test-Path $Env:SystemRoot\\system32\\Sysprep\\unattend.xml ) {\r\n  Remove-Item $Env:SystemRoot\\system32\\Sysprep\\unattend.xml -Force\r\n}\r\n& $Env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /mode:vm /quiet /quit\r\nwhile($true) {\r\n  $imageState = (Get-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup\\State).ImageState\r\n  Write-Output $imageState\r\n  if ($imageState -eq 'IMAGE_STATE_GENERALIZE_RESEAL_TO_OOBE') { break }\r\n  Start-Sleep -s 5\r\n}\r\nWrite-Output '>>> Sysprep complete ...'",
-    "$fxv#5": "# Download FSLogix\r\n\r\n$ErrorActionPreference = 'Stop'\r\n\r\ntry \r\n{\r\n    # Download the latest version of FSLogix\r\n    $URL = 'https://aka.ms/fslogix_download'\r\n    $ZIP = 'C:\\temp\\fslogix.zip'\r\n    Invoke-WebRequest -Uri $URL -OutFile $ZIP\r\n    Write-Host 'Downloaded latest version of FSLogix'\r\n\r\n    # Unblock the ZIP file containing FSLogix\r\n    Unblock-File -Path $ZIP\r\n    Write-Host 'Unblocked the ZIP file containing FSLogix'\r\n\r\n    # Expand the ZIP file containing FSLogix\r\n    Expand-Archive -LiteralPath $ZIP -DestinationPath 'C:\\temp\\fslogix' -Force\r\n    Write-Host 'Expanded the ZIP file containing FSLogix'\r\n}\r\ncatch \r\n{\r\n    Write-Host $_\r\n    throw\r\n}",
-    "$fxv#6": "# Download & extract the Office 365 Deployment Toolkit\r\n\r\n$ErrorActionPreference = 'Stop'\r\n\r\ntry \r\n{\r\n    $URL = 'https://download.microsoft.com/download/2/7/A/27AF1BE6-DD20-4CB4-B154-EBAB8A7D4A7E/officedeploymenttool_16130-20218.exe'\r\n    $Installer = 'C:\\temp\\office.exe'\r\n    Invoke-WebRequest -Uri $URL -OutFile $Installer\r\n    Write-Host 'Downloaded the Office 365 Deployment Toolkit'\r\n\r\n    Start-Process -FilePath $Installer -ArgumentList \"/extract:C:\\temp /quiet /passive /norestart\" -Wait -PassThru | Out-Null\r\n    Write-Host 'Extracted the Office 365 Deployment Toolkit'\r\n}\r\ncatch \r\n{\r\n    Write-Host $_\r\n    throw\r\n}",
-    "$fxv#7": "# Download OneDrive\r\n\r\n$ErrorActionPreference = 'Stop'\r\n\r\ntry \r\n{\r\n    # Download OneDrive installer to temp folder\r\n    $URL = 'https://go.microsoft.com/fwlink/?linkid=844652'\r\n    $Installer = 'C:\\temp\\OneDrive.exe'\r\n    Invoke-WebRequest -Uri $URL -OutFile $Installer\r\n    Write-Host 'Downloaded the OneDrive installer'\r\n}\r\ncatch \r\n{\r\n    Write-Host $_\r\n    throw\r\n}",
-    "$fxv#8": "# Download Teams software\r\n$ErrorActionPreference = 'Stop'\r\ntry \r\n{\r\n    # Visual C++\r\n    $URL = 'https://aka.ms/vs/16/release/vc_redist.x64.exe'\r\n    $Installer = 'C:\\temp\\vc_redist.x64.exe'\r\n    Invoke-WebRequest -Uri $URL -OutFile $Installer\r\n    Write-Host 'Downloaded Visual C++'\r\n\r\n    # Teams WebSocket Service\r\n    $URL = 'https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RE4AQBt'\r\n    $Installer = 'C:\\temp\\webSocketSvc.msi'\r\n    Invoke-WebRequest -Uri $URL -OutFile $Installer\r\n    Write-Host 'Downloaded the Teams WebSocket service'\r\n\r\n    # Teams\r\n    $URL = 'https://teams.microsoft.com/downloads/desktopurl?env=production&plat=windows&arch=x64&managedInstaller=true&download=true'\r\n    $Installer = 'C:\\temp\\teams.msi'\r\n    Invoke-WebRequest -Uri $URL -OutFile $Installer\r\n    Write-Host 'Downloaded Teams'\r\n}\r\ncatch \r\n{\r\n    Write-Host $_\r\n    throw\r\n}",
-    "$fxv#9": "# Download the Virtual Desktop Optimization Tool (VDOT)\r\n# https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool\r\n$ErrorActionPreference = 'Stop'\r\ntry\r\n{\r\n    # Download VDOT\r\n    $URL = 'https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool/archive/refs/heads/main.zip'\r\n    $ZIP = 'C:\\temp\\VDOT.zip'\r\n    Invoke-WebRequest -Uri $URL -OutFile $ZIP\r\n    Write-Host 'Downloaded the GitHub repository for the Virtual Desktop Optimization Tool'\r\n    \r\n    # Unblock ZIP archive\r\n    Unblock-File -Path $ZIP\r\n    Write-Host 'Unblocked the archive of the Virtual Desktop Optimization Tool'\r\n\r\n    # Extract VDOT from ZIP archive\r\n    Expand-Archive -LiteralPath $ZIP -DestinationPath 'C:\\temp' -Force\r\n    Write-Host 'Expanded the archive of the Virtual Desktop Optimization Tool'\r\n\r\n    # Fix to disable AppX Packages\r\n    # As of 2/8/22, all AppX Packages are enabled by default\r\n    $Files = (Get-ChildItem -Path 'C:\\temp\\Virtual-Desktop-Optimization-Tool-main' -File -Recurse -Filter 'AppxPackages.json').FullName\r\n    foreach($File in $Files)\r\n    {\r\n        $Content = Get-Content -Path $File\r\n        $Settings = $Content | ConvertFrom-Json\r\n        $NewSettings = @()\r\n        foreach($Setting in $Settings)\r\n        {\r\n            $NewSettings += [pscustomobject][ordered]@{\r\n                AppxPackage = $Setting.AppxPackage\r\n                VDIState = 'Disabled'\r\n                URL = $Setting.URL\r\n                Description = $Setting.Description\r\n            }\r\n        }\r\n\r\n        $JSON = $NewSettings | ConvertTo-Json\r\n        $JSON | Out-File -FilePath $File -Force\r\n    }\r\n    Write-Host 'Disabled all Appx Packages in the configuration files for the Virtual Desktop Optimization Tool'\r\n}\r\ncatch \r\n{\r\n    Write-Host $_\r\n    throw\r\n}",
-    "Assets": [
-      {
-        "content": "[variables('O365Content')]",
-        "fileName": "[variables('O365FileName')]"
-      },
-      {
-        "content": "[subscription().tenantId]",
-        "fileName": "tenantId.txt"
-      },
-      {
-        "content": "[variables('$fxv#0')]",
-        "fileName": "Add-FSLogix.ps1"
-      },
-      {
-        "content": "[variables('$fxv#1')]",
-        "fileName": "Add-O365.ps1"
-      },
-      {
-        "content": "[variables('$fxv#2')]",
-        "fileName": "Add-OneDrive.ps1"
-      },
-      {
-        "content": "[variables('$fxv#3')]",
-        "fileName": "Add-Teams.ps1"
-      },
-      {
-        "content": "[variables('$fxv#4')]",
-        "fileName": "DeprovisioningScript.ps1"
-      },
-      {
-        "content": "[variables('$fxv#5')]",
-        "fileName": "Get-FSLogix.ps1"
-      },
-      {
-        "content": "[variables('$fxv#6')]",
-        "fileName": "Get-O365.ps1"
-      },
-      {
-        "content": "[variables('$fxv#7')]",
-        "fileName": "Get-OneDrive.ps1"
-      },
-      {
-        "content": "[variables('$fxv#8')]",
-        "fileName": "Get-Teams.ps1"
-      },
-      {
-        "content": "[variables('$fxv#9')]",
-        "fileName": "Get-VDOT.ps1"
-      },
-      {
-        "content": "[variables('$fxv#10')]",
-        "fileName": "Remove-FSLogix.ps1"
-      },
-      {
-        "content": "[variables('$fxv#11')]",
-        "fileName": "Remove-OneDrive.ps1"
-      },
-      {
-        "content": "[variables('$fxv#12')]",
-        "fileName": "Set-RegistrySetting.ps1"
-      },
-      {
-        "content": "[variables('$fxv#13')]",
-        "fileName": "Set-VDOT.ps1"
-      }
-    ],
-    "ContainerName": "artifacts",
-    "ContainerUri": "[format('https://{0}.blob.{1}/{2}/', variables('StorageAccountName'), variables('StorageSuffix'), variables('ContainerName'))]",
-    "DeploymentScriptName": "[format('ds-{0}', variables('NamingStandard'))]",
-    "ImageTemplateName": "[format('it-{0}-{1}-{2}', toLower(parameters('ImageDefinitionName')), parameters('Environment'), variables('LocationShortName'))]",
-    "LocationShortName": "[variables('Locations')[parameters('Location')].acronym]",
-    "Locations": "[variables('$fxv#14')]",
-    "NamingStandard": "[format('aib-{0}-{1}', parameters('Environment'), variables('LocationShortName'))]",
-    "O365FileName": "office365x64.xml",
-    "O365ConfigHeader": "<Configuration><Add OfficeClientEdition=\"64\" Channel=\"Current\">",
-    "O365AddOffice": "[if(parameters('InstallOffice'), '<Product ID=\"O365ProPlusRetail\"><Language ID=\"en-us\" /></Product>', '')]",
-    "O365AddProject": "[if(parameters('InstallProject'), '<Product ID=\"ProjectProRetail\"><Language ID=\"en-us\" /></Product>', '')]",
-    "O365AddVisio": "[if(parameters('InstallVisio'), '<Product ID=\"VisioProRetail\"><Language ID=\"en-us\" /></Product>', '')]",
-    "O365ConfigFooter": "</Add><Updates Enabled=\"FALSE\" /><Display Level=\"None\" AcceptEULA=\"TRUE\" /><Property Name=\"FORCEAPPSHUTDOWN\" Value=\"TRUE\"/><Property Name=\"SharedComputerLicensing\" Value=\"1\"/></Configuration>",
-    "O365Content": "[format('{0}{1}{2}{3}{4}', variables('O365ConfigHeader'), variables('O365AddOffice'), variables('O365AddProject'), variables('O365AddVisio'), variables('O365ConfigFooter'))]",
-    "PrivateDnsZoneName": "[format('privatelink.blob.{0}', variables('StorageSuffix'))]",
-    "ResourceGroup": "[format('rg-{0}', variables('NamingStandard'))]",
     "Roles": [
       {
         "resourceGroup": "[parameters('VirtualNetworkResourceGroupName')]",
@@ -590,7 +279,7 @@
         ]
       },
       {
-        "resourceGroup": "[variables('ResourceGroup')]",
+        "resourceGroup": "[parameters('ResourceGroupName')]",
         "name": "Image Template Contributor",
         "description": "Allow the creation and management of images",
         "permissions": [
@@ -608,15 +297,20 @@
         ]
       }
     ],
-    "StagingResourceGroupName": "[format('rg-aib-{0}-{1}-staging-{2}', parameters('Environment'), variables('LocationShortName'), toLower(parameters('ImageDefinitionName')))]",
-    "StorageAccountName": "[format('saaib{0}{1}', parameters('Environment'), variables('LocationShortName'))]",
-    "StorageSuffix": "[environment().suffixes.storage]"
+    "StagingResourceGroupName": "[format('{0}-staging-{1}', parameters('ResourceGroupName'), parameters('ImageSku'))]",
+    "TeamsUrl": "[variables('TeamsUrls')[parameters('TenantType')]]",
+    "TeamsUrls": {
+      "Commercial": "https://teams.microsoft.com/downloads/desktopurl?env=production&plat=windows&arch=x64&managedInstaller=true&download=true",
+      "DepartmentOfDefense": "https://dod.teams.microsoft.us/downloads/desktopurl?env=production&plat=windows&arch=x64&managedInstaller=true&download=true",
+      "GovernmentCommunityCloud": "https://teams.microsoft.com/downloads/desktopurl?env=production&plat=windows&arch=x64&managedInstaller=true&ring=general_gcc&download=true",
+      "GovernmentCommunityCloudHigh": "https://gov.teams.microsoft.us/downloads/desktopurl?env=production&plat=windows&arch=x64&managedInstaller=true&download=true"
+    }
   },
   "resources": [
     {
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2019-10-01",
-      "name": "[variables('ResourceGroup')]",
+      "name": "[parameters('ResourceGroupName')]",
       "location": "[parameters('Location')]",
       "tags": "[parameters('Tags')]",
       "properties": {}
@@ -642,21 +336,18 @@
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2022-09-01",
       "name": "[format('UserAssignedIdentity_{0}', parameters('Timestamp'))]",
-      "resourceGroup": "[variables('ResourceGroup')]",
+      "resourceGroup": "[parameters('ResourceGroupName')]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
         },
         "mode": "Incremental",
         "parameters": {
-          "Environment": {
-            "value": "[parameters('Environment')]"
-          },
           "Location": {
             "value": "[parameters('Location')]"
           },
-          "LocationShortName": {
-            "value": "[variables('LocationShortName')]"
+          "Name": {
+            "value": "[parameters('UserAssignedIdentityName')]"
           },
           "Tags": {
             "value": "[parameters('Tags')]"
@@ -668,18 +359,15 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.16.2.56959",
-              "templateHash": "12301855746940395783"
+              "version": "0.17.1.54307",
+              "templateHash": "3163069718352189003"
             }
           },
           "parameters": {
-            "Environment": {
-              "type": "string"
-            },
             "Location": {
               "type": "string"
             },
-            "LocationShortName": {
+            "Name": {
               "type": "string"
             },
             "Tags": {
@@ -690,7 +378,7 @@
             {
               "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
               "apiVersion": "2018-11-30",
-              "name": "[format('uai-aib-{0}-{1}', parameters('Environment'), parameters('LocationShortName'))]",
+              "name": "[parameters('Name')]",
               "location": "[parameters('Location')]",
               "tags": "[parameters('Tags')]"
             }
@@ -698,17 +386,17 @@
           "outputs": {
             "PrincipalId": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('uai-aib-{0}-{1}', parameters('Environment'), parameters('LocationShortName'))), '2018-11-30').principalId]"
+              "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('Name')), '2018-11-30').principalId]"
             },
             "ResourceId": {
               "type": "string",
-              "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('uai-aib-{0}-{1}', parameters('Environment'), parameters('LocationShortName')))]"
+              "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('Name'))]"
             }
           }
         }
       },
       "dependsOn": [
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('ResourceGroup'))]"
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('ResourceGroupName'))]"
       ]
     },
     {
@@ -729,7 +417,7 @@
         "mode": "Incremental",
         "parameters": {
           "PrincipalId": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp'))), '2022-09-01').outputs.PrincipalId.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroupName')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp'))), '2022-09-01').outputs.PrincipalId.value]"
           },
           "RoleDefinitionId": {
             "value": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', guid(variables('Roles')[range(0, length(variables('Roles')))[range(0, length(variables('Roles')))[copyIndex()]]].name, subscription().id))]"
@@ -741,8 +429,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.16.2.56959",
-              "templateHash": "4005248515570104495"
+              "version": "0.17.1.54307",
+              "templateHash": "3114694774721710459"
             }
           },
           "parameters": {
@@ -751,27 +439,10 @@
             },
             "RoleDefinitionId": {
               "type": "string"
-            },
-            "StorageAccountName": {
-              "type": "string",
-              "defaultValue": ""
             }
           },
           "resources": [
             {
-              "condition": "[not(empty(parameters('StorageAccountName')))]",
-              "type": "Microsoft.Authorization/roleAssignments",
-              "apiVersion": "2020-10-01-preview",
-              "scope": "[format('Microsoft.Storage/storageAccounts/{0}', parameters('StorageAccountName'))]",
-              "name": "[guid(parameters('PrincipalId'), parameters('RoleDefinitionId'), resourceGroup().id)]",
-              "properties": {
-                "roleDefinitionId": "[parameters('RoleDefinitionId')]",
-                "principalId": "[parameters('PrincipalId')]",
-                "principalType": "ServicePrincipal"
-              }
-            },
-            {
-              "condition": "[empty(parameters('StorageAccountName'))]",
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2020-10-01-preview",
               "name": "[guid(parameters('PrincipalId'), parameters('RoleDefinitionId'), resourceGroup().id)]",
@@ -786,391 +457,22 @@
       },
       "dependsOn": [
         "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', guid(variables('Roles')[range(0, length(variables('Roles')))[range(0, length(variables('Roles')))[copyIndex()]]].name, subscription().id))]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp')))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
-      "name": "[format('StorageAccount_{0}', parameters('Timestamp'))]",
-      "resourceGroup": "[variables('ResourceGroup')]",
-      "properties": {
-        "expressionEvaluationOptions": {
-          "scope": "inner"
-        },
-        "mode": "Incremental",
-        "parameters": {
-          "Assets": {
-            "value": "[variables('Assets')]"
-          },
-          "ContainerName": {
-            "value": "[variables('ContainerName')]"
-          },
-          "DeploymentScriptName": {
-            "value": "[variables('DeploymentScriptName')]"
-          },
-          "ExistingPrivateDnsZoneResourceId": {
-            "value": "[parameters('ExistingPrivateDnsZoneResourceId')]"
-          },
-          "Location": {
-            "value": "[parameters('Location')]"
-          },
-          "PrivateDnsZoneName": {
-            "value": "[variables('PrivateDnsZoneName')]"
-          },
-          "StorageAccountName": {
-            "value": "[variables('StorageAccountName')]"
-          },
-          "StorageEndpoint": {
-            "value": "[parameters('StorageEndpoint')]"
-          },
-          "SubnetName": {
-            "value": "[parameters('SubnetName')]"
-          },
-          "Tags": {
-            "value": "[parameters('Tags')]"
-          },
-          "Timestamp": {
-            "value": "[parameters('Timestamp')]"
-          },
-          "UserAssignedIdentityPrincipalId": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp'))), '2022-09-01').outputs.PrincipalId.value]"
-          },
-          "VirtualNetworkName": {
-            "value": "[parameters('VirtualNetworkName')]"
-          },
-          "VirtualNetworkResourceGroupName": {
-            "value": "[parameters('VirtualNetworkResourceGroupName')]"
-          }
-        },
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "metadata": {
-            "_generator": {
-              "name": "bicep",
-              "version": "0.16.2.56959",
-              "templateHash": "9807021083480193472"
-            }
-          },
-          "parameters": {
-            "Assets": {
-              "type": "array"
-            },
-            "ContainerName": {
-              "type": "string"
-            },
-            "DeploymentScriptName": {
-              "type": "string"
-            },
-            "ExistingPrivateDnsZoneResourceId": {
-              "type": "string"
-            },
-            "Location": {
-              "type": "string"
-            },
-            "PrivateDnsZoneName": {
-              "type": "string"
-            },
-            "StorageAccountName": {
-              "type": "string"
-            },
-            "StorageEndpoint": {
-              "type": "string"
-            },
-            "SubnetName": {
-              "type": "string"
-            },
-            "Tags": {
-              "type": "object"
-            },
-            "Timestamp": {
-              "type": "string"
-            },
-            "UserAssignedIdentityPrincipalId": {
-              "type": "string"
-            },
-            "VirtualNetworkName": {
-              "type": "string"
-            },
-            "VirtualNetworkResourceGroupName": {
-              "type": "string"
-            }
-          },
-          "variables": {
-            "PrivateDnsZoneResourceGroupName": "[if(empty(parameters('ExistingPrivateDnsZoneResourceId')), resourceGroup().name, split(parameters('ExistingPrivateDnsZoneResourceId'), '/')[4])]",
-            "PrivateDnsZoneSubscriptionId": "[if(empty(parameters('ExistingPrivateDnsZoneResourceId')), subscription().subscriptionId, split(parameters('ExistingPrivateDnsZoneResourceId'), '/')[2])]",
-            "RoleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1')]",
-            "SubnetResourceId": "[resourceId(parameters('VirtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('VirtualNetworkName'), parameters('SubnetName'))]",
-            "VirtualNetworkRules": {
-              "PrivateEndpoint": [],
-              "PublicEndpoint": [],
-              "ServiceEndpoint": [
-                {
-                  "id": "[variables('SubnetResourceId')]",
-                  "action": "Allow"
-                }
-              ]
-            }
-          },
-          "resources": [
-            {
-              "type": "Microsoft.Storage/storageAccounts",
-              "apiVersion": "2021-02-01",
-              "name": "[parameters('StorageAccountName')]",
-              "location": "[parameters('Location')]",
-              "tags": "[parameters('Tags')]",
-              "sku": {
-                "name": "Standard_LRS"
-              },
-              "kind": "StorageV2",
-              "properties": {
-                "minimumTlsVersion": "TLS1_2",
-                "networkAcls": {
-                  "bypass": "AzureServices",
-                  "virtualNetworkRules": "[variables('VirtualNetworkRules')[parameters('StorageEndpoint')]]",
-                  "ipRules": [],
-                  "defaultAction": "[if(equals(parameters('StorageEndpoint'), 'PublicEndpoint'), 'Allow', 'Deny')]"
-                },
-                "supportsHttpsTrafficOnly": true,
-                "encryption": {
-                  "services": {
-                    "file": {
-                      "keyType": "Account",
-                      "enabled": true
-                    }
-                  },
-                  "keySource": "Microsoft.Storage"
-                }
-              }
-            },
-            {
-              "type": "Microsoft.Storage/storageAccounts/blobServices",
-              "apiVersion": "2022-09-01",
-              "name": "[format('{0}/{1}', parameters('StorageAccountName'), 'default')]",
-              "properties": {},
-              "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('StorageAccountName'))]"
-              ]
-            },
-            {
-              "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
-              "apiVersion": "2022-09-01",
-              "name": "[format('{0}/{1}/{2}', parameters('StorageAccountName'), 'default', 'artifacts')]",
-              "properties": {
-                "publicAccess": "None"
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('StorageAccountName'), 'default')]"
-              ]
-            },
-            {
-              "type": "Microsoft.Authorization/roleAssignments",
-              "apiVersion": "2022-04-01",
-              "scope": "[format('Microsoft.Storage/storageAccounts/{0}/blobServices/{1}/containers/{2}', parameters('StorageAccountName'), 'default', 'artifacts')]",
-              "name": "[guid(parameters('UserAssignedIdentityPrincipalId'), variables('RoleDefinitionId'), resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', parameters('StorageAccountName'), 'default', 'artifacts'))]",
-              "properties": {
-                "roleDefinitionId": "[variables('RoleDefinitionId')]",
-                "principalId": "[parameters('UserAssignedIdentityPrincipalId')]"
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', parameters('StorageAccountName'), 'default', 'artifacts')]"
-              ]
-            },
-            {
-              "condition": "[empty(parameters('ExistingPrivateDnsZoneResourceId'))]",
-              "type": "Microsoft.Network/privateDnsZones",
-              "apiVersion": "2018-09-01",
-              "name": "[parameters('PrivateDnsZoneName')]",
-              "location": "global",
-              "tags": "[parameters('Tags')]",
-              "properties": {}
-            },
-            {
-              "condition": "[empty(parameters('ExistingPrivateDnsZoneResourceId'))]",
-              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
-              "apiVersion": "2018-09-01",
-              "name": "[format('{0}/{1}', parameters('PrivateDnsZoneName'), format('link-{0}', parameters('VirtualNetworkName')))]",
-              "location": "global",
-              "tags": "[parameters('Tags')]",
-              "properties": {
-                "registrationEnabled": false,
-                "virtualNetwork": {
-                  "id": "[resourceId(parameters('VirtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks', parameters('VirtualNetworkName'))]"
-                }
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Network/privateDnsZones', parameters('PrivateDnsZoneName'))]"
-              ]
-            },
-            {
-              "type": "Microsoft.Network/privateEndpoints",
-              "apiVersion": "2020-05-01",
-              "name": "[format('pe-{0}', parameters('StorageAccountName'))]",
-              "location": "[parameters('Location')]",
-              "tags": "[parameters('Tags')]",
-              "properties": {
-                "subnet": {
-                  "id": "[variables('SubnetResourceId')]"
-                },
-                "privateLinkServiceConnections": [
-                  {
-                    "name": "[format('pe-{0}_{1}', parameters('StorageAccountName'), guid(parameters('StorageAccountName')))]",
-                    "properties": {
-                      "privateLinkServiceId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('StorageAccountName'))]",
-                      "groupIds": [
-                        "blob"
-                      ]
-                    }
-                  }
-                ]
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('StorageAccountName'))]"
-              ]
-            },
-            {
-              "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
-              "apiVersion": "2021-08-01",
-              "name": "[format('{0}/{1}', format('pe-{0}', parameters('StorageAccountName')), parameters('StorageAccountName'))]",
-              "properties": {
-                "privateDnsZoneConfigs": [
-                  {
-                    "name": "ipconfig1",
-                    "properties": {
-                      "privateDnsZoneId": "[if(empty(parameters('ExistingPrivateDnsZoneResourceId')), resourceId('Microsoft.Network/privateDnsZones', parameters('PrivateDnsZoneName')), extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', variables('PrivateDnsZoneSubscriptionId'), variables('PrivateDnsZoneResourceGroupName')), 'Microsoft.Network/privateDnsZones', if(empty(parameters('ExistingPrivateDnsZoneResourceId')), parameters('PrivateDnsZoneName'), parameters('PrivateDnsZoneName'))))]"
-                    }
-                  }
-                ]
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Network/privateDnsZones', parameters('PrivateDnsZoneName'))]",
-                "[resourceId('Microsoft.Network/privateEndpoints', format('pe-{0}', parameters('StorageAccountName')))]"
-              ]
-            },
-            {
-              "copy": {
-                "name": "uploadBlobs",
-                "count": "[length(range(0, length(parameters('Assets'))))]"
-              },
-              "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
-              "name": "[format('DeploymentScript_UploadBlob_{0}_{1}', range(0, length(parameters('Assets')))[copyIndex()], parameters('Timestamp'))]",
-              "properties": {
-                "expressionEvaluationOptions": {
-                  "scope": "inner"
-                },
-                "mode": "Incremental",
-                "parameters": {
-                  "ContainerName": {
-                    "value": "[parameters('ContainerName')]"
-                  },
-                  "Content": {
-                    "value": "[parameters('Assets')[range(0, length(parameters('Assets')))[copyIndex()]].content]"
-                  },
-                  "DeploymentScriptName": {
-                    "value": "[format('{0}-uploadBlob-{1}', parameters('DeploymentScriptName'), replace(parameters('Assets')[range(0, length(parameters('Assets')))[copyIndex()]].fileName, '.ps1', ''))]"
-                  },
-                  "FileName": {
-                    "value": "[parameters('Assets')[range(0, length(parameters('Assets')))[copyIndex()]].fileName]"
-                  },
-                  "Location": {
-                    "value": "[parameters('Location')]"
-                  },
-                  "StorageAccountName": {
-                    "value": "[parameters('StorageAccountName')]"
-                  },
-                  "Tags": {
-                    "value": "[parameters('Tags')]"
-                  }
-                },
-                "template": {
-                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-                  "contentVersion": "1.0.0.0",
-                  "metadata": {
-                    "_generator": {
-                      "name": "bicep",
-                      "version": "0.16.2.56959",
-                      "templateHash": "836468705891648616"
-                    }
-                  },
-                  "parameters": {
-                    "ContainerName": {
-                      "type": "string"
-                    },
-                    "Content": {
-                      "type": "string"
-                    },
-                    "DeploymentScriptName": {
-                      "type": "string"
-                    },
-                    "FileName": {
-                      "type": "string"
-                    },
-                    "Location": {
-                      "type": "string"
-                    },
-                    "StorageAccountName": {
-                      "type": "string"
-                    },
-                    "Tags": {
-                      "type": "object"
-                    }
-                  },
-                  "resources": [
-                    {
-                      "type": "Microsoft.Resources/deploymentScripts",
-                      "apiVersion": "2020-10-01",
-                      "name": "[parameters('DeploymentScriptName')]",
-                      "location": "[parameters('Location')]",
-                      "tags": "[parameters('Tags')]",
-                      "kind": "AzureCLI",
-                      "properties": {
-                        "azCliVersion": "2.26.1",
-                        "timeout": "PT5M",
-                        "retentionInterval": "PT1H",
-                        "environmentVariables": [
-                          {
-                            "name": "AZURE_STORAGE_ACCOUNT",
-                            "value": "[parameters('StorageAccountName')]"
-                          },
-                          {
-                            "name": "AZURE_STORAGE_KEY",
-                            "secureValue": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('StorageAccountName')), '2021-01-01').keys[0].value]"
-                          },
-                          {
-                            "name": "CONTENT",
-                            "value": "[parameters('Content')]"
-                          }
-                        ],
-                        "scriptContent": "[format('echo \"$CONTENT\" > {0} && az storage blob upload -f {1} -c {2} -n {3}', parameters('FileName'), parameters('FileName'), parameters('ContainerName'), parameters('FileName'))]"
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          ]
-        }
-      },
-      "dependsOn": [
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('ResourceGroup'))]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp')))]"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroupName')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp')))]"
       ]
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2022-09-01",
       "name": "[format('ComputeGallery_{0}', parameters('Timestamp'))]",
-      "resourceGroup": "[variables('ResourceGroup')]",
+      "resourceGroup": "[parameters('ResourceGroupName')]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
         },
         "mode": "Incremental",
         "parameters": {
-          "Environment": {
-            "value": "[parameters('Environment')]"
+          "ComputeGalleryName": {
+            "value": "[parameters('ComputeGalleryName')]"
           },
           "ImageDefinitionName": {
             "value": "[parameters('ImageDefinitionName')]"
@@ -1190,9 +492,6 @@
           "Location": {
             "value": "[parameters('Location')]"
           },
-          "LocationShortName": {
-            "value": "[variables('LocationShortName')]"
-          },
           "Tags": {
             "value": "[parameters('Tags')]"
           }
@@ -1203,12 +502,12 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.16.2.56959",
-              "templateHash": "10619740128088676391"
+              "version": "0.17.1.54307",
+              "templateHash": "9828867393297655598"
             }
           },
           "parameters": {
-            "Environment": {
+            "ComputeGalleryName": {
               "type": "string"
             },
             "ImageDefinitionName": {
@@ -1229,9 +528,6 @@
             "Location": {
               "type": "string"
             },
-            "LocationShortName": {
-              "type": "string"
-            },
             "Tags": {
               "type": "object"
             }
@@ -1240,14 +536,14 @@
             {
               "type": "Microsoft.Compute/galleries",
               "apiVersion": "2022-01-03",
-              "name": "[format('cg_aib_{0}_{1}', parameters('Environment'), parameters('LocationShortName'))]",
+              "name": "[parameters('ComputeGalleryName')]",
               "location": "[parameters('Location')]",
               "tags": "[parameters('Tags')]"
             },
             {
               "type": "Microsoft.Compute/galleries/images",
               "apiVersion": "2022-01-03",
-              "name": "[format('{0}/{1}', format('cg_aib_{0}_{1}', parameters('Environment'), parameters('LocationShortName')), parameters('ImageDefinitionName'))]",
+              "name": "[format('{0}/{1}', parameters('ComputeGalleryName'), parameters('ImageDefinitionName'))]",
               "location": "[parameters('Location')]",
               "tags": "[parameters('Tags')]",
               "properties": {
@@ -1262,20 +558,20 @@
                 "features": "[if(equals(parameters('ImageDefinitionSecurityType'), 'Standard'), null(), createArray(createObject('name', 'SecurityType', 'value', parameters('ImageDefinitionSecurityType'))))]"
               },
               "dependsOn": [
-                "[resourceId('Microsoft.Compute/galleries', format('cg_aib_{0}_{1}', parameters('Environment'), parameters('LocationShortName')))]"
+                "[resourceId('Microsoft.Compute/galleries', parameters('ComputeGalleryName'))]"
               ]
             }
           ],
           "outputs": {
             "ImageDefinitionResourceId": {
               "type": "string",
-              "value": "[resourceId('Microsoft.Compute/galleries/images', format('cg_aib_{0}_{1}', parameters('Environment'), parameters('LocationShortName')), parameters('ImageDefinitionName'))]"
+              "value": "[resourceId('Microsoft.Compute/galleries/images', parameters('ComputeGalleryName'), parameters('ImageDefinitionName'))]"
             }
           }
         }
       },
       "dependsOn": [
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('ResourceGroup'))]"
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('ResourceGroupName'))]"
       ]
     },
     {
@@ -1283,21 +579,18 @@
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2022-09-01",
       "name": "[format('NetworkPolicy_{0}', parameters('Timestamp'))]",
-      "resourceGroup": "[variables('ResourceGroup')]",
+      "resourceGroup": "[parameters('ResourceGroupName')]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
         },
         "mode": "Incremental",
         "parameters": {
-          "Environment": {
-            "value": "[parameters('Environment')]"
+          "DeploymentScriptName": {
+            "value": "[parameters('DeploymentScriptName')]"
           },
           "Location": {
             "value": "[parameters('Location')]"
-          },
-          "LocationShortName": {
-            "value": "[variables('LocationShortName')]"
           },
           "SubnetName": {
             "value": "[parameters('SubnetName')]"
@@ -1309,7 +602,7 @@
             "value": "[parameters('Timestamp')]"
           },
           "UserAssignedIdentityResourceId": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp'))), '2022-09-01').outputs.ResourceId.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroupName')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp'))), '2022-09-01').outputs.ResourceId.value]"
           },
           "VirtualNetworkName": {
             "value": "[parameters('VirtualNetworkName')]"
@@ -1324,18 +617,15 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.16.2.56959",
-              "templateHash": "7569676084512633640"
+              "version": "0.17.1.54307",
+              "templateHash": "12308001312789708638"
             }
           },
           "parameters": {
-            "Environment": {
+            "DeploymentScriptName": {
               "type": "string"
             },
             "Location": {
-              "type": "string"
-            },
-            "LocationShortName": {
               "type": "string"
             },
             "SubnetName": {
@@ -1361,7 +651,7 @@
             {
               "type": "Microsoft.Resources/deploymentScripts",
               "apiVersion": "2020-10-01",
-              "name": "[format('ds-aib-{0}-{1}', parameters('Environment'), parameters('LocationShortName'))]",
+              "name": "[parameters('DeploymentScriptName')]",
               "location": "[parameters('Location')]",
               "tags": "[parameters('Tags')]",
               "kind": "AzurePowerShell",
@@ -1377,7 +667,7 @@
                 "cleanupPreference": "Always",
                 "forceUpdateTag": "[parameters('Timestamp')]",
                 "retentionInterval": "PT2H",
-                "scriptContent": "$VNET = Get-AzVirtualNetwork -Name $VirtualNetwork -ResourceGroupName $ResourceGroup; ($VNET | Select-Object -ExpandProperty \"Subnets\" | Where-Object {$_.Name -eq $Subnet}).privateLinkServiceNetworkPolicies = \"Disabled\"; $VNET | Set-AzVirtualNetwork",
+                "scriptContent": "Param([string]$ResourceGroup, [string]$Subnet, [string]$VirtualNetwork); $VNET = Get-AzVirtualNetwork -Name $VirtualNetwork -ResourceGroupName $ResourceGroup; ($VNET | Select-Object -ExpandProperty \"Subnets\" | Where-Object {$_.Name -eq $Subnet}).privateLinkServiceNetworkPolicies = \"Disabled\"; $VNET | Set-AzVirtualNetwork",
                 "timeout": "PT30M"
               }
             }
@@ -1385,48 +675,24 @@
         }
       },
       "dependsOn": [
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('ResourceGroup'))]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('ResourceGroupName'))]",
         "roleAssignments",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp')))]"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroupName')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp')))]"
       ]
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2022-09-01",
       "name": "[format('ImageTemplate_{0}', parameters('Timestamp'))]",
-      "resourceGroup": "[variables('ResourceGroup')]",
+      "resourceGroup": "[parameters('ResourceGroupName')]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
         },
         "mode": "Incremental",
         "parameters": {
-          "ContainerUri": {
-            "value": "[variables('ContainerUri')]"
-          },
-          "InstallFSLogix": {
-            "value": "[parameters('InstallFSLogix')]"
-          },
-          "InstallOffice": {
-            "value": "[parameters('InstallOffice')]"
-          },
-          "InstallOneDrive": {
-            "value": "[parameters('InstallOneDrive')]"
-          },
-          "InstallProject": {
-            "value": "[parameters('InstallProject')]"
-          },
-          "InstallTeams": {
-            "value": "[parameters('InstallTeams')]"
-          },
-          "InstallVirtualDesktopOptimizationTool": {
-            "value": "[parameters('InstallVirtualDesktopOptimizationTool')]"
-          },
-          "InstallVisio": {
-            "value": "[parameters('InstallVisio')]"
-          },
           "ImageDefinitionResourceId": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('ComputeGallery_{0}', parameters('Timestamp'))), '2022-09-01').outputs.ImageDefinitionResourceId.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroupName')), 'Microsoft.Resources/deployments', format('ComputeGallery_{0}', parameters('Timestamp'))), '2022-09-01').outputs.ImageDefinitionResourceId.value]"
           },
           "ImageOffer": {
             "value": "[parameters('ImageOffer')]"
@@ -1441,10 +707,52 @@
             "value": "[parameters('ImageStorageAccountType')]"
           },
           "ImageTemplateName": {
-            "value": "[variables('ImageTemplateName')]"
+            "value": "[parameters('ImageTemplateName')]"
           },
           "ImageVersion": {
             "value": "[parameters('ImageVersion')]"
+          },
+          "InstallAccess": {
+            "value": "[parameters('InstallAccess')]"
+          },
+          "InstallExcel": {
+            "value": "[parameters('InstallExcel')]"
+          },
+          "InstallFSLogix": {
+            "value": "[parameters('InstallFSLogix')]"
+          },
+          "InstallOneDriveForBusiness": {
+            "value": "[parameters('InstallOneDriveForBusiness')]"
+          },
+          "InstallOneNote": {
+            "value": "[parameters('InstallOneNote')]"
+          },
+          "InstallOutlook": {
+            "value": "[parameters('InstallOutlook')]"
+          },
+          "InstallPowerPoint": {
+            "value": "[parameters('InstallPowerPoint')]"
+          },
+          "InstallProject": {
+            "value": "[parameters('InstallProject')]"
+          },
+          "InstallPublisher": {
+            "value": "[parameters('InstallPublisher')]"
+          },
+          "InstallSkypeForBusiness": {
+            "value": "[parameters('InstallSkypeForBusiness')]"
+          },
+          "InstallTeams": {
+            "value": "[parameters('InstallTeams')]"
+          },
+          "InstallVirtualDesktopOptimizationTool": {
+            "value": "[parameters('InstallVirtualDesktopOptimizationTool')]"
+          },
+          "InstallVisio": {
+            "value": "[parameters('InstallVisio')]"
+          },
+          "InstallWord": {
+            "value": "[parameters('InstallWord')]"
           },
           "Location": {
             "value": "[parameters('Location')]"
@@ -1458,11 +766,14 @@
           "Tags": {
             "value": "[parameters('Tags')]"
           },
+          "TeamsUrl": {
+            "value": "[variables('TeamsUrl')]"
+          },
           "Timestamp": {
             "value": "[parameters('Timestamp')]"
           },
           "UserAssignedIdentityResourceId": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp'))), '2022-09-01').outputs.ResourceId.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroupName')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp'))), '2022-09-01').outputs.ResourceId.value]"
           },
           "VirtualMachineSize": {
             "value": "[parameters('VirtualMachineSize')]"
@@ -1480,35 +791,11 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.16.2.56959",
-              "templateHash": "721829398661453365"
+              "version": "0.17.1.54307",
+              "templateHash": "10843494999936365172"
             }
           },
           "parameters": {
-            "ContainerUri": {
-              "type": "string"
-            },
-            "InstallFSLogix": {
-              "type": "bool"
-            },
-            "InstallOffice": {
-              "type": "bool"
-            },
-            "InstallOneDrive": {
-              "type": "bool"
-            },
-            "InstallProject": {
-              "type": "bool"
-            },
-            "InstallTeams": {
-              "type": "bool"
-            },
-            "InstallVirtualDesktopOptimizationTool": {
-              "type": "bool"
-            },
-            "InstallVisio": {
-              "type": "bool"
-            },
             "ImageDefinitionResourceId": {
               "type": "string"
             },
@@ -1530,6 +817,48 @@
             "ImageVersion": {
               "type": "string"
             },
+            "InstallAccess": {
+              "type": "bool"
+            },
+            "InstallExcel": {
+              "type": "bool"
+            },
+            "InstallFSLogix": {
+              "type": "bool"
+            },
+            "InstallOneDriveForBusiness": {
+              "type": "bool"
+            },
+            "InstallOneNote": {
+              "type": "bool"
+            },
+            "InstallOutlook": {
+              "type": "bool"
+            },
+            "InstallPowerPoint": {
+              "type": "bool"
+            },
+            "InstallProject": {
+              "type": "bool"
+            },
+            "InstallPublisher": {
+              "type": "bool"
+            },
+            "InstallSkypeForBusiness": {
+              "type": "bool"
+            },
+            "InstallTeams": {
+              "type": "bool"
+            },
+            "InstallVirtualDesktopOptimizationTool": {
+              "type": "bool"
+            },
+            "InstallVisio": {
+              "type": "bool"
+            },
+            "InstallWord": {
+              "type": "bool"
+            },
             "Location": {
               "type": "string"
             },
@@ -1541,6 +870,9 @@
             },
             "Tags": {
               "type": "object"
+            },
+            "TeamsUrl": {
+              "type": "string"
             },
             "Timestamp": {
               "type": "string"
@@ -1562,7 +894,7 @@
             "CreateTempDir": [
               {
                 "type": "PowerShell",
-                "name": "Create TEMP Directory",
+                "name": "Create the TEMP Directory",
                 "runElevated": true,
                 "runAsSystem": true,
                 "inline": [
@@ -1570,33 +902,44 @@
                 ]
               }
             ],
-            "FSLogixType": "[if(contains(parameters('ImageSku'), 'avd'), createArray(createObject('type', 'PowerShell', 'name', 'Download FSLogix', 'runElevated', true(), 'runAsSystem', true(), 'scriptUri', format('{0}Get-FSLogix.ps1', parameters('ContainerUri'))), createObject('type', 'PowerShell', 'name', 'Uninstall FSLogix', 'runElevated', true(), 'runAsSystem', true(), 'scriptUri', format('{0}Remove-FSLogix.ps1', parameters('ContainerUri'))), createObject('type', 'WindowsRestart', 'name', 'Restart after FSLogix uninstall', 'restartTimeout', '5m'), createObject('type', 'PowerShell', 'name', 'Install FSLogix', 'runElevated', true(), 'runAsSystem', true(), 'scriptUri', format('{0}Add-FSLogix.ps1', parameters('ContainerUri'))), createObject('type', 'WindowsRestart', 'name', 'Restart after FSLogix install', 'restartTimeout', '5m')), createArray(createObject('type', 'PowerShell', 'name', 'Download FSLogix', 'runElevated', true(), 'runAsSystem', true(), 'scriptUri', format('{0}Get-FSLogix.ps1', parameters('ContainerUri'))), createObject('type', 'PowerShell', 'name', 'Install FSLogix', 'runElevated', true(), 'runAsSystem', true(), 'scriptUri', format('{0}fslogix.ps1', parameters('ContainerUri'))), createObject('type', 'WindowsRestart', 'name', 'Restart after FSLogix install', 'restartTimeout', '5m')))]",
-            "FSLogix": "[if(parameters('InstallFSLogix'), variables('FSLogixType'), createArray())]",
-            "Functions": [
-              {
-                "type": "File",
-                "name": "Download Functions Script",
-                "sourceUri": "[format('{0}Set-RegistrySetting.ps1', parameters('ContainerUri'))]",
-                "destination": "C:\\temp\\Set-RegistrySetting.ps1"
-              }
-            ],
-            "Office": "[if(or(or(parameters('InstallOffice'), parameters('InstallVisio')), parameters('InstallProject')), createArray(createObject('type', 'PowerShell', 'name', 'Download Microsoft Office 365', 'runElevated', true(), 'runAsSystem', true(), 'scriptUri', format('{0}Get-O365.ps1', parameters('ContainerUri'))), createObject('type', 'File', 'name', 'Download Microsoft Office 365 Configuration File', 'sourceUri', format('{0}office365x64.xml', parameters('ContainerUri')), 'destination', 'C:\\temp\\office365x64.xml'), createObject('type', 'PowerShell', 'name', 'Install Microsoft Office 365', 'runElevated', true(), 'runAsSystem', true(), 'scriptUri', format('{0}Add-O365.ps1', parameters('ContainerUri')))), createArray())]",
-            "OneDriveType": "[if(equals(parameters('ImageSku'), 'office-365'), createArray(createObject('type', 'PowerShell', 'name', 'Download OneDrive', 'runElevated', true(), 'runAsSystem', true(), 'scriptUri', format('{0}Get-OneDrive.ps1', parameters('ContainerUri'))), createObject('type', 'File', 'name', 'Download OneDrive Configuration File', 'sourceUri', format('{0}tenantId.txt', parameters('ContainerUri')), 'destination', 'C:\\temp\\tenantId.txt'), createObject('type', 'PowerShell', 'name', 'Uninstall OneDrive', 'runElevated', true(), 'runAsSystem', true(), 'scriptUri', format('{0}Remove-OneDrive.ps1', parameters('ContainerUri'))), createObject('type', 'WindowsRestart', 'name', 'Restart after OneDrive uninstall', 'restartTimeout', '5m'), createObject('type', 'PowerShell', 'name', 'Install OneDrive', 'runElevated', true(), 'runAsSystem', true(), 'scriptUri', format('{0}Add-OneDrive.ps1', parameters('ContainerUri')))), createArray(createObject('type', 'PowerShell', 'name', 'Download OneDrive', 'runElevated', true(), 'runAsSystem', true(), 'scriptUri', format('{0}Get-OneDrive.ps1', parameters('ContainerUri'))), createObject('type', 'File', 'name', 'Download OneDrive Configuration File', 'sourceUri', format('{0}tenantId.txt', parameters('ContainerUri')), 'destination', 'C:\\temp\\tenantId.txt'), createObject('type', 'PowerShell', 'name', 'Install OneDrive', 'runElevated', true(), 'runAsSystem', true(), 'scriptUri', format('{0}Add-OneDrive.ps1', parameters('ContainerUri')))))]",
-            "OneDrive": "[if(parameters('InstallOneDrive'), variables('OneDriveType'), createArray())]",
+            "Environment": "[environment().name]",
+            "FSLogix": "[if(parameters('InstallFSLogix'), createArray(createObject('type', 'PowerShell', 'name', 'Download FSLogix', 'runElevated', true(), 'runAsSystem', true(), 'inline', '$ErrorActionPreference = \"Stop\"; $ZIP = \"C:\\temp\\fslogix.zip\"; Invoke-WebRequest -Uri \"https://aka.ms/fslogix_download\" -OutFile $ZIP; Unblock-File -Path $ZIP; Expand-Archive -LiteralPath $ZIP -DestinationPath \"C:\\temp\\fslogix\" -Force; Write-Host \"Downloaded the latest version of FSLogix\";'), createObject('type', 'PowerShell', 'name', 'Install FSLogix', 'runElevated', true(), 'runAsSystem', true(), 'scriptUri', '$ErrorActionPreference = \"Stop\"; Start-Process -FilePath \"C:\\temp\\fslogix\\x64\\Release\\FSLogixAppsSetup.exe\" -ArgumentList \"/install /quiet /norestart\" -Wait -PassThru | Out-Null; Write-Host \"Installed the latest version of FSLogix\";'), createObject('type', 'WindowsRestart', 'name', 'Restart after the installation of FSLogix ')), createArray())]",
+            "MultiSessionOs": "[or(contains(parameters('ImageSku'), 'avd'), contains(parameters('ImageSku'), 'evd'))]",
+            "O365ConfigHeader": "<Configuration><Add OfficeClientEdition=\"64\" Channel=\"Current\">",
+            "O365AddOfficeHeader": "[if(or(or(or(or(or(or(or(or(or(parameters('InstallAccess'), parameters('InstallExcel')), parameters('InstallOneDriveForBusiness')), parameters('InstallOneNote')), parameters('InstallOutlook')), parameters('InstallPowerPoint')), parameters('InstallPublisher')), parameters('InstallSkypeForBusiness')), and(parameters('InstallTeams'), equals(variables('Environment'), 'AzureCloud'))), parameters('InstallWord')), '<Product ID=\"O365ProPlusRetail\"><Language ID=\"en-us\" />', '')]",
+            "O365AddAccess": "[if(parameters('InstallAccess'), '', '<ExcludeApp ID=\"Access\" />')]",
+            "O365AddExcel": "[if(parameters('InstallExcel'), '', '<ExcludeApp ID=\"Excel\" />')]",
+            "O365AddOneDriveForBusiness": "[if(parameters('InstallOneDriveForBusiness'), '', '<ExcludeApp ID=\"Groove\" />')]",
+            "O365AddOneNote": "[if(parameters('InstallOneNote'), '', '<ExcludeApp ID=\"OneNote\" />')]",
+            "O365AddOutlook": "[if(parameters('InstallOutlook'), '', '<ExcludeApp ID=\"Outlook\" />')]",
+            "O365AddPowerPoint": "[if(parameters('InstallPowerPoint'), '', '<ExcludeApp ID=\"PowerPoint\" />')]",
+            "O365AddPublisher": "[if(parameters('InstallPublisher'), '', '<ExcludeApp ID=\"Publisher\" />')]",
+            "O365AddSkypeForBusiness": "[if(parameters('InstallSkypeForBusiness'), '', '<ExcludeApp ID=\"Lync\" />')]",
+            "O365AddTeams": "[if(and(parameters('InstallTeams'), equals(variables('Environment'), 'AzureCloud')), '', '<ExcludeApp ID=\"Teams\" />')]",
+            "O365AddWord": "[if(parameters('InstallWord'), '', '<ExcludeApp ID=\"Word\" />')]",
+            "O365AddOfficeFooter": "[if(or(or(or(or(or(or(or(or(or(parameters('InstallAccess'), parameters('InstallExcel')), parameters('InstallOneDriveForBusiness')), parameters('InstallOneNote')), parameters('InstallOutlook')), parameters('InstallPowerPoint')), parameters('InstallPublisher')), parameters('InstallSkypeForBusiness')), and(parameters('InstallTeams'), equals(variables('Environment'), 'AzureCloud'))), parameters('InstallWord')), '</Product>', '')]",
+            "O365AddProject": "[if(parameters('InstallProject'), '<Product ID=\"ProjectProRetail\"><Language ID=\"en-us\" /></Product>', '')]",
+            "O365AddVisio": "[if(parameters('InstallVisio'), '<Product ID=\"VisioProRetail\"><Language ID=\"en-us\" /></Product>', '')]",
+            "O365Settings": "</Add><Updates Enabled=\"FALSE\" /><Display Level=\"None\" AcceptEULA=\"TRUE\" /><Property Name=\"FORCEAPPSHUTDOWN\" Value=\"TRUE\"/>",
+            "O365SharedActivation": "[if(variables('MultiSessionOs'), '<Property Name=\"SharedComputerLicensing\" Value=\"1\"/>', '')]",
+            "O365ConfigFooter": "</Configuration>",
+            "O365Content": "[format('{0}{1}{2}{3}{4}{5}{6}{7}{8}{9}{10}{11}{12}{13}{14}{15}{16}{17}', variables('O365ConfigHeader'), variables('O365AddOfficeHeader'), variables('O365AddAccess'), variables('O365AddExcel'), variables('O365AddOneDriveForBusiness'), variables('O365AddOneNote'), variables('O365AddOutlook'), variables('O365AddPowerPoint'), variables('O365AddPublisher'), variables('O365AddSkypeForBusiness'), variables('O365AddTeams'), variables('O365AddWord'), variables('O365AddOfficeFooter'), variables('O365AddProject'), variables('O365AddVisio'), variables('O365Settings'), variables('O365SharedActivation'), variables('O365ConfigFooter'))]",
+            "Office": "[if(or(or(or(or(or(or(or(or(or(or(or(parameters('InstallAccess'), parameters('InstallExcel')), parameters('InstallOneDriveForBusiness')), parameters('InstallOneNote')), parameters('InstallOutlook')), parameters('InstallPowerPoint')), parameters('InstallPublisher')), parameters('InstallSkypeForBusiness')), and(parameters('InstallTeams'), equals(variables('Environment'), 'AzureCloud'))), parameters('InstallWord')), parameters('InstallVisio')), parameters('InstallProject')), createArray(createObject('type', 'PowerShell', 'name', 'Upload the Microsoft Office 365 Configuration File', 'runElevated', true(), 'runAsSystem', true(), 'inline', format('{0} | Out-File -FilePath \"C:\\temp\\office365x64.xml', variables('O365Content'))), createObject('type', 'PowerShell', 'name', 'Download & extract the Microsoft Office 365 Deployment Toolkit', 'runElevated', true(), 'runAsSystem', true(), 'inline', '$ErrorActionPreference = \"Stop\"; $Installer = \"C:\\temp\\office.exe\"; Invoke-WebRequest -Uri \"https://www.microsoft.com/en-us/download/confirmation.aspx?id=49117\" -OutFile $Installer; Start-Process -FilePath $Installer -ArgumentList \"/extract:C:\\temp /quiet /passive /norestart\" -Wait -PassThru | Out-Null; Write-Host \"Downloaded & extracted the Office 365 Deployment Toolkit\";'), createObject('type', 'PowerShell', 'name', 'Install the selected Microsoft Office 365 applications', 'runElevated', true(), 'runAsSystem', true(), 'inline', '$ErrorActionPreference = \"Stop\"; Start-Process -FilePath \"C:\\temp\\setup.exe\" -ArgumentList \"/configure C:\\temp\\office365x64.xml\" -Wait -PassThru | Out-Null; Write-Host \"Installed the selected Office365 applications\";')), createArray())]",
             "Sysprep": [
               {
-                "type": "File",
-                "name": "Download custom Sysprep script",
-                "sourceUri": "[format('{0}DeprovisioningScript.ps1', parameters('ContainerUri'))]",
-                "destination": "C:\\DeprovisioningScript.ps1"
+                "type": "PowerShell",
+                "name": "Update the sysprep mode on the Deprovisioning Script",
+                "runElevated": true,
+                "runAsSystem": true,
+                "inline": "$ErrorActionPreference = \"Stop\"; $Path = \"C:\\DeprovisioningScript.ps1\"; ((Get-Content -Path $Path -Raw) -replace \"/quit\",\"/quit /mode:vm\") | Set-Content -Path $Path"
               }
             ],
-            "Teams": "[if(parameters('InstallTeams'), createArray(createObject('type', 'PowerShell', 'name', 'Download Teams', 'runElevated', true(), 'runAsSystem', true(), 'scriptUri', format('{0}Get-Teams.ps1', parameters('ContainerUri'))), createObject('type', 'PowerShell', 'name', 'Install Teams', 'runElevated', true(), 'runAsSystem', true(), 'scriptUri', format('{0}Add-Teams.ps1', parameters('ContainerUri')))), createArray())]",
-            "VDOT": "[if(parameters('InstallVirtualDesktopOptimizationTool'), createArray(createObject('type', 'PowerShell', 'name', 'Download the Virtual Desktop Optimization Tool', 'runElevated', true(), 'runAsSystem', true(), 'scriptUri', format('{0}Get-VDOT.ps1', parameters('ContainerUri'))), createObject('type', 'PowerShell', 'name', 'Execute the Virtual Desktop Optimization Tool', 'runElevated', true(), 'runAsSystem', true(), 'scriptUri', format('{0}Set-VDOT.ps1', parameters('ContainerUri'))), createObject('type', 'WindowsRestart', 'name', 'Restart after VDOT execution', 'restartTimeout', '5m')), createArray())]",
+            "Teams": "[if(and(parameters('InstallTeams'), equals(variables('Environment'), 'AzureUSGovernment')), createArray(createObject('type', 'PowerShell', 'name', 'Download & install Teams for either GCC High or DoD tenants', 'runElevated', true(), 'runAsSystem', true(), 'inline', format('$ErrorActionPreference = \"Stop\"; $Installers = @(@{{\"URL\"=\"https://aka.ms/vs/16/release/vc_redist.x64.exe\";\"File\"=\"C:\\temp\\vc_redist.x64.exe\"}}, @{{\"URL\"=\"https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RE4AQBt\";\"File\"=\"C:\\temp\\webSocketSvc.msi\"}}, @{{\"URL\"={0};\"File\"=\"C:\temp\teams.msi\"}}); foreach($Installer in $Installers){{Invoke-WebRequest -Uri $Installer.URL -OutFile $Installer.File}}; if({1} -eq \"true\"){{Start-Process \"reg\" -ArgumentList \"add HKLM\\SOFTWARE\\Microsoft\\Teams /v IsWVDEnvironment /t REG_DWORD /d 1 /f\"}}; Start-Process -FilePath $Installers[0].File -Args \"/install /quiet /norestart /log vcdist.log\" -Wait -PassThru | Out-Null; Start-Process -FilePath msiexec.exe -Args \"/i $($Installers[1].File) /quiet /qn /norestart /passive /log webSocket.log\" -Wait -PassThru | Out-Null; Start-Process -FilePath msiexec.exe -Args \"/i $($Installers[2].File) /quiet /qn /norestart /passive /log teams.log ALLUSER=1 ALLUSERS=1\" -Wait -PassThru | Out-Null;', parameters('TeamsUrl'), variables('MultiSessionOs')))), createArray())]",
+            "VDOT": "[if(parameters('InstallVirtualDesktopOptimizationTool'), createArray(createObject('type', 'PowerShell', 'name', 'Download & execute the Virtual Desktop Optimization Tool', 'runElevated', true(), 'runAsSystem', true(), 'inline', '$ErrorActionPreference = \"Stop\"; $ZIP = \"C:\\temp\\VDOT.zip\"; Invoke-WebRequest -Uri $URL -OutFile $ZIP; Unblock-File -Path $ZIP; Expand-Archive -LiteralPath $ZIP -DestinationPath \"C:\temp\" -Force; $Path = (Get-ChildItem -Path \"C:\temp\" -Recurse | Where-Object {$_.Name -eq \"Windows_VDOT.ps1\"}).FullName; $Script = Get-Content -Path $Path; $ScriptUpdate = $Script -replace \"Set-NetAdapterAdvancedProperty\", \"#Set-NetAdapterAdvancedProperty\"; $ScriptUpdate | Set-Content -Path $Path; & $Path -Optimizations \"AppxPackages\",\"Autologgers\",\"DefaultUserSettings\",\"LGPO\",\"NetworkOptimizations\",\"ScheduledTasks\",\"Services\",\"WindowsMediaPlayer\" -AdvancedOptimizations \"Edge\",\"RemoveLegacyIE\" -AcceptEULA; Write-Host \"Optimized the operating system using the Virtual Desktop Optimization Tool\";'), createObject('type', 'WindowsRestart', 'name', 'Restart after the execution of the Virtual Desktop Optimization Tool')), createArray())]",
             "RemoveTempDir": [
               {
                 "type": "PowerShell",
-                "name": "Remove TEMP Directory",
+                "name": "Remove the TEMP Directory",
                 "runElevated": true,
                 "runAsSystem": true,
                 "inline": [
@@ -1615,11 +958,9 @@
               },
               {
                 "type": "WindowsRestart",
-                "name": "Restart after Windows Updates",
-                "restartTimeout": "5m"
+                "name": "Restart after the Windows Updates"
               }
-            ],
-            "Customizers": "[union(variables('CreateTempDir'), variables('VDOT'), variables('Functions'), variables('FSLogix'), variables('Office'), variables('OneDrive'), variables('Teams'), variables('RemoveTempDir'), variables('WindowsUpdate'), variables('Sysprep'))]"
+            ]
           },
           "resources": [
             {
@@ -1651,7 +992,7 @@
                   "sku": "[parameters('ImageSku')]",
                   "version": "[parameters('ImageVersion')]"
                 },
-                "customize": "[variables('Customizers')]",
+                "customize": "[union(variables('CreateTempDir'), variables('VDOT'), variables('FSLogix'), variables('Office'), variables('Teams'), variables('RemoveTempDir'), variables('WindowsUpdate'), variables('Sysprep'))]",
                 "distribute": [
                   {
                     "type": "SharedImage",
@@ -1670,12 +1011,11 @@
         }
       },
       "dependsOn": [
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('ComputeGallery_{0}', parameters('Timestamp')))]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('NetworkPolicy_{0}', parameters('Timestamp')))]",
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('ResourceGroup'))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroupName')), 'Microsoft.Resources/deployments', format('ComputeGallery_{0}', parameters('Timestamp')))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroupName')), 'Microsoft.Resources/deployments', format('NetworkPolicy_{0}', parameters('Timestamp')))]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('ResourceGroupName'))]",
         "roleAssignments",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('StorageAccount_{0}', parameters('Timestamp')))]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp')))]"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroupName')), 'Microsoft.Resources/deployments', format('UserAssignedIdentity_{0}', parameters('Timestamp')))]"
       ]
     },
     {
@@ -1704,8 +1044,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.16.2.56959",
-              "templateHash": "13519623963697872240"
+              "version": "0.17.1.54307",
+              "templateHash": "4794203918987823520"
             }
           },
           "parameters": {
@@ -1734,7 +1074,7 @@
         }
       },
       "dependsOn": [
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('ResourceGroup')), 'Microsoft.Resources/deployments', format('ImageTemplate_{0}', parameters('Timestamp')))]"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('ResourceGroupName')), 'Microsoft.Resources/deployments', format('ImageTemplate_{0}', parameters('Timestamp')))]"
       ]
     }
   ]
