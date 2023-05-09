@@ -1,15 +1,14 @@
-param Environment string
+param ComputeGalleryName string
 param ImageDefinitionName string
 param ImageDefinitionSecurityType string
 param ImageOffer string
 param ImagePublisher string
 param ImageSku string
 param Location string
-param LocationShortName string
 param Tags object
 
 resource gallery 'Microsoft.Compute/galleries@2022-01-03' = {
-  name: 'cg_aib_${Environment}_${LocationShortName}'
+  name: ComputeGalleryName
   location: Location
   tags: Tags
 }

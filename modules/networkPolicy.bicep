@@ -1,6 +1,5 @@
-param Environment string
+param DeploymentScriptName string
 param Location string
-param LocationShortName string
 param SubnetName string
 param Tags object
 param Timestamp string
@@ -10,7 +9,7 @@ param VirtualNetworkResourceGroupName string
 
 
 resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
-  name: 'ds-aib-${Environment}-${LocationShortName}'
+  name: DeploymentScriptName
   location: Location
   tags: Tags
   kind: 'AzurePowerShell'
