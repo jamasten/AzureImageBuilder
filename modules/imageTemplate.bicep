@@ -117,10 +117,31 @@ var Sysprep = [
 var Teams = InstallTeams && Environment == 'AzureUSGovernment' ? [
   {
     type: 'PowerShell'
-    name: 'Download & install Teams for either GCC High or DoD tenants'
+    name: 'Enable media optimization for Teams'
     runElevated: true
     runAsSystem: true
-    inline: '$ErrorActionPreference = "Stop"; $Installers = @(@{"URL"="https://aka.ms/vs/16/release/vc_redist.x64.exe";"File"="C:\\temp\\vc_redist.x64.exe"}, @{"URL"="https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RE4AQBt";"File"="C:\\temp\\webSocketSvc.msi"}, @{"URL"=${TeamsUrl};"File"="C:\temp\teams.msi"}); foreach($Installer in $Installers){Invoke-WebRequest -Uri $Installer.URL -OutFile $Installer.File}; if(${MultiSessionOs} -eq "true"){Start-Process "reg" -ArgumentList "add HKLM\\SOFTWARE\\Microsoft\\Teams /v IsWVDEnvironment /t REG_DWORD /d 1 /f"}; Start-Process -FilePath $Installers[0].File -Args "/install /quiet /norestart /log vcdist.log" -Wait -PassThru | Out-Null; Start-Process -FilePath msiexec.exe -Args "/i $($Installers[1].File) /quiet /qn /norestart /passive /log webSocket.log" -Wait -PassThru | Out-Null; Start-Process -FilePath msiexec.exe -Args "/i $($Installers[2].File) /quiet /qn /norestart /passive /log teams.log ALLUSER=1 ALLUSERS=1" -Wait -PassThru | Out-Null;'
+    inline: 'if(${MultiSessionOs} -eq "true"){Start-Process "reg" -ArgumentList "add HKLM\\SOFTWARE\\Microsoft\\Teams /v IsWVDEnvironment /t REG_DWORD /d 1 /f"; Write-Host "Enabled media optimizations for Teams"}'
+  }
+  {
+    type: 'PowerShell'
+    name: 'Download & install the latest version of Microsoft Visual C++ Redistributable'
+    runElevated: true
+    runAsSystem: true
+    inline: '$ErrorActionPreference = "Stop"; $File = "C:\\temp\\vc_redist.x64.exe"; Invoke-WebRequest -Uri "https://aka.ms/vs/16/release/vc_redist.x64.exe" -OutFile $File; Start-Process -FilePath $File -Args "/install /quiet /norestart /log vcdist.log" -Wait -PassThru | Out-Null; Write-Host "Installed the latest version of Microsoft Visual C++ Redistributable";'
+  }
+  {
+    type: 'PowerShell'
+    name: 'Download & install the Remote Desktop WebRTC Redirector Service'
+    runElevated: true
+    runAsSystem: true
+    inline: '$ErrorActionPreference = "Stop"; $File = "C:\\temp\\webSocketSvc.msi"; Invoke-WebRequest -Uri "https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RE4AQBt" -OutFile $File; Start-Process -FilePath msiexec.exe -Args "/i $File /quiet /qn /norestart /passive /log webSocket.log" -Wait -PassThru | Out-Null; Write-Host "Installed the Remote Desktop WebRTC Redirector Service";'
+  }
+  {
+    type: 'PowerShell'
+    name: 'Download & install Teams'
+    runElevated: true
+    runAsSystem: true
+    inline: '$ErrorActionPreference = "Stop"; $File = "C:\\temp\\teams.msi"; Invoke-WebRequest -Uri ${TeamsUrl} -OutFile $File; Start-Process -FilePath msiexec.exe -Args "/i $File /quiet /qn /norestart /passive /log teams.log ALLUSER=1 ALLUSERS=1" -Wait -PassThru | Out-Null; Write-Host "Installed Teams";'
   }
 ] : []
 var VDOT = InstallVirtualDesktopOptimizationTool ? [
