@@ -37,7 +37,8 @@ var CreateTempDir = [
     runElevated: true
     runAsSystem: true
     inline: [
-      'New-Item -Path "C:\\" -Name "temp" -ItemType "Directory" -Force | Out-Null; Write-Host "Created Temp Directory"'
+      'New-Item -Path "C:\\" -Name "temp" -ItemType "Directory" -Force | Out-Null'
+      'Write-Host "Created Temp Directory"'
     ]
   }
 ]
@@ -48,14 +49,25 @@ var FSLogix = InstallFSLogix ? [
     name: 'Download FSLogix'
     runElevated: true
     runAsSystem: true
-    inline: '$ErrorActionPreference = "Stop"; $ZIP = "C:\\temp\\fslogix.zip"; Invoke-WebRequest -Uri "https://aka.ms/fslogix_download" -OutFile $ZIP; Unblock-File -Path $ZIP; Expand-Archive -LiteralPath $ZIP -DestinationPath "C:\\temp\\fslogix" -Force; Write-Host "Downloaded the latest version of FSLogix";'
+    inline: [
+      '$ErrorActionPreference = "Stop"'
+      '$ZIP = "C:\\temp\\fslogix.zip"'
+      'Invoke-WebRequest -Uri "https://aka.ms/fslogix_download" -OutFile $ZIP'
+      'Unblock-File -Path $ZIP'
+      'Expand-Archive -LiteralPath $ZIP -DestinationPath "C:\\temp\\fslogix" -Force'
+      'Write-Host "Downloaded the latest version of FSLogix"'
+    ]
   }
   {
     type: 'PowerShell'
     name: 'Install FSLogix'
     runElevated: true
     runAsSystem: true
-    scriptUri: '$ErrorActionPreference = "Stop"; Start-Process -FilePath "C:\\temp\\fslogix\\x64\\Release\\FSLogixAppsSetup.exe" -ArgumentList "/install /quiet /norestart" -Wait -PassThru | Out-Null; Write-Host "Installed the latest version of FSLogix";'
+    inline: [
+      '$ErrorActionPreference = "Stop"'
+      'Start-Process -FilePath "C:\\temp\\fslogix\\x64\\Release\\FSLogixAppsSetup.exe" -ArgumentList "/install /quiet /norestart" -Wait -PassThru | Out-Null'
+      'Write-Host "Installed the latest version of FSLogix"'
+    ]
   }
   {
     type: 'WindowsRestart'
@@ -88,21 +100,35 @@ var Office = InstallAccess || InstallExcel || InstallOneDriveForBusiness || Inst
     name: 'Upload the Microsoft Office 365 Configuration File'
     runElevated: true
     runAsSystem: true
-    inline: '${O365Content} | Out-File -FilePath "C:\\temp\\office365x64.xml'
+    inline: [
+      '$Configuration = "${O365Content}"'
+      '$Configuration | Out-File -FilePath "C:\\temp\\office365x64.xml" -ErrorAction "Stop"'
+      'Write-Host "Uploaded the Office365 configuration file"'
+    ]
   }
   {
     type: 'PowerShell'
     name: 'Download & extract the Microsoft Office 365 Deployment Toolkit'
     runElevated: true
     runAsSystem: true
-    inline: '$ErrorActionPreference = "Stop"; $Installer = "C:\\temp\\office.exe"; Invoke-WebRequest -Uri "https://www.microsoft.com/en-us/download/confirmation.aspx?id=49117" -OutFile $Installer; Start-Process -FilePath $Installer -ArgumentList "/extract:C:\\temp /quiet /passive /norestart" -Wait -PassThru | Out-Null; Write-Host "Downloaded & extracted the Office 365 Deployment Toolkit";'
+    inline: [
+      '$ErrorActionPreference = "Stop"'
+      '$Installer = "C:\\temp\\office.exe"'
+      'Invoke-WebRequest -Uri "https://www.microsoft.com/en-us/download/confirmation.aspx?id=49117" -OutFile $Installer'
+      'Start-Process -FilePath $Installer -ArgumentList "/extract:C:\\temp /quiet /passive /norestart" -Wait -PassThru | Out-Null'
+      'Write-Host "Downloaded & extracted the Office 365 Deployment Toolkit"'
+    ]
   }
   {
     type: 'PowerShell'
     name: 'Install the selected Microsoft Office 365 applications'
     runElevated: true
     runAsSystem: true
-    inline: '$ErrorActionPreference = "Stop"; Start-Process -FilePath "C:\\temp\\setup.exe" -ArgumentList "/configure C:\\temp\\office365x64.xml" -Wait -PassThru | Out-Null; Write-Host "Installed the selected Office365 applications";'
+    inline: [
+      '$ErrorActionPreference = "Stop"'
+      'Start-Process -FilePath "C:\\temp\\setup.exe" -ArgumentList "/configure C:\\temp\\office365x64.xml" -Wait -PassThru | Out-Null'
+      'Write-Host "Installed the selected Office365 applications"'
+    ]
   }
 ] : []
 var Sysprep = [
@@ -111,37 +137,62 @@ var Sysprep = [
     name: 'Update the sysprep mode on the Deprovisioning Script'
     runElevated: true
     runAsSystem: true
-    inline: '$ErrorActionPreference = "Stop"; $Path = "C:\\DeprovisioningScript.ps1"; ((Get-Content -Path $Path -Raw).Replace("/quit";"/quit /mode:vm") | Set-Content -Path $Path;'
+    inline: [
+      '$ErrorActionPreference = "Stop"'
+      '$Path = "C:\\DeprovisioningScript.ps1"'
+      '((Get-Content -Path $Path -Raw).Replace("/quit";"/quit /mode:vm") | Set-Content -Path $Path'
+      'Write-Host "Updated the deprovisioning script"'
+    ]
   }
 ]
 var Teams = InstallTeams && Environment == 'AzureUSGovernment' ? [
   {
     type: 'PowerShell'
-    name: 'Enable media optimization for Teams'
+    name: 'Enable media optimizations for Teams'
     runElevated: true
     runAsSystem: true
-    inline: 'if(${MultiSessionOs} -eq "true"){Start-Process "reg" -ArgumentList "add HKLM\\SOFTWARE\\Microsoft\\Teams /v IsWVDEnvironment /t REG_DWORD /d 1 /f"; Write-Host "Enabled media optimizations for Teams"}'
+    inline: [
+      'if(${MultiSessionOs} -eq "true"){Start-Process "reg" -ArgumentList "add HKLM\\SOFTWARE\\Microsoft\\Teams /v IsWVDEnvironment /t REG_DWORD /d 1 /f" -Wait -PassThru -ErrorAction "Stop"; Write-Host "Enabled media optimizations for Teams"}'
+    ]
   }
   {
     type: 'PowerShell'
     name: 'Download & install the latest version of Microsoft Visual C++ Redistributable'
     runElevated: true
     runAsSystem: true
-    inline: '$ErrorActionPreference = "Stop"; $File = "C:\\temp\\vc_redist.x64.exe"; Invoke-WebRequest -Uri "https://aka.ms/vs/16/release/vc_redist.x64.exe" -OutFile $File; Start-Process -FilePath $File -Args "/install /quiet /norestart /log vcdist.log" -Wait -PassThru | Out-Null; Write-Host "Installed the latest version of Microsoft Visual C++ Redistributable";'
+    inline: [
+      '$ErrorActionPreference = "Stop"'
+      '$File = "C:\\temp\\vc_redist.x64.exe"'
+      'Invoke-WebRequest -Uri "https://aka.ms/vs/16/release/vc_redist.x64.exe" -OutFile $File'
+      'Start-Process -FilePath $File -Args "/install /quiet /norestart /log vcdist.log" -Wait -PassThru | Out-Null'
+      'Write-Host "Installed the latest version of Microsoft Visual C++ Redistributable"'
+    ]
   }
   {
     type: 'PowerShell'
     name: 'Download & install the Remote Desktop WebRTC Redirector Service'
     runElevated: true
     runAsSystem: true
-    inline: '$ErrorActionPreference = "Stop"; $File = "C:\\temp\\webSocketSvc.msi"; Invoke-WebRequest -Uri "https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RE4AQBt" -OutFile $File; Start-Process -FilePath msiexec.exe -Args "/i $File /quiet /qn /norestart /passive /log webSocket.log" -Wait -PassThru | Out-Null; Write-Host "Installed the Remote Desktop WebRTC Redirector Service";'
+    inline: [
+      '$ErrorActionPreference = "Stop"'
+      '$File = "C:\\temp\\webSocketSvc.msi"'
+      'Invoke-WebRequest -Uri "https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RE4AQBt" -OutFile $File'
+      'Start-Process -FilePath msiexec.exe -Args "/i $File /quiet /qn /norestart /passive /log webSocket.log" -Wait -PassThru | Out-Null'
+      'Write-Host "Installed the Remote Desktop WebRTC Redirector Service"'
+    ]
   }
   {
     type: 'PowerShell'
     name: 'Download & install Teams'
     runElevated: true
     runAsSystem: true
-    inline: '$ErrorActionPreference = "Stop"; $File = "C:\\temp\\teams.msi"; Invoke-WebRequest -Uri ${TeamsUrl} -OutFile $File; Start-Process -FilePath msiexec.exe -Args "/i $File /quiet /qn /norestart /passive /log teams.log ALLUSER=1 ALLUSERS=1" -Wait -PassThru | Out-Null; Write-Host "Installed Teams";'
+    inline: [
+      '$ErrorActionPreference = "Stop"'
+      '$File = "C:\\temp\\teams.msi"'
+      'Invoke-WebRequest -Uri "${TeamsUrl}" -OutFile $File'
+      'Start-Process -FilePath msiexec.exe -Args "/i $File /quiet /qn /norestart /passive /log teams.log ALLUSER=1 ALLUSERS=1" -Wait -PassThru | Out-Null'
+      'Write-Host "Installed Teams"'
+    ]
   }
 ] : []
 var VDOT = InstallVirtualDesktopOptimizationTool ? [
@@ -150,7 +201,19 @@ var VDOT = InstallVirtualDesktopOptimizationTool ? [
     name: 'Download & execute the Virtual Desktop Optimization Tool'
     runElevated: true
     runAsSystem: true
-    inline: '$ErrorActionPreference = "Stop"; $ZIP = "C:\\temp\\VDOT.zip"; Invoke-WebRequest -Uri "https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool/archive/refs/heads/main.zip" -OutFile $ZIP; Unblock-File -Path $ZIP; Expand-Archive -LiteralPath $ZIP -DestinationPath "C:\temp" -Force; $Path = (Get-ChildItem -Path "C:\temp" -Recurse | Where-Object {$_.Name -eq "Windows_VDOT.ps1"}).FullName; $Script = Get-Content -Path $Path; $ScriptUpdate = $Script.Replace("Set-NetAdapterAdvancedProperty";"#Set-NetAdapterAdvancedProperty"); $ScriptUpdate | Set-Content -Path $Path; & $Path -Optimizations @("AppxPackages";"Autologgers";"DefaultUserSettings";"LGPO";"NetworkOptimizations";"ScheduledTasks";"Services";"WindowsMediaPlayer") -AdvancedOptimizations @("Edge";"RemoveLegacyIE") -AcceptEULA; Write-Host "Optimized the operating system using the Virtual Desktop Optimization Tool";'
+    inline: [
+      '$ErrorActionPreference = "Stop"'
+      '$ZIP = "C:\\temp\\VDOT.zip"'
+      'Invoke-WebRequest -Uri "https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool/archive/refs/heads/main.zip" -OutFile $ZIP'
+      'Unblock-File -Path $ZIP'
+      'Expand-Archive -LiteralPath $ZIP -DestinationPath "C:\\temp" -Force'
+      '$Path = (Get-ChildItem -Path "C:\\temp" -Recurse | Where-Object {$_.Name -eq "Windows_VDOT.ps1"}).FullName'
+      '$Script = Get-Content -Path $Path'
+      '$ScriptUpdate = $Script.Replace("Set-NetAdapterAdvancedProperty";"#Set-NetAdapterAdvancedProperty")'
+      '$ScriptUpdate | Set-Content -Path $Path'
+      '& $Path -Optimizations @("AppxPackages";"Autologgers";"DefaultUserSettings";"LGPO";"NetworkOptimizations";"ScheduledTasks";"Services";"WindowsMediaPlayer") -AdvancedOptimizations @("Edge";"RemoveLegacyIE") -AcceptEULA'
+      'Write-Host "Optimized the operating system using the Virtual Desktop Optimization Tool"'
+    ]
   }
   {
     type: 'WindowsRestart'
@@ -164,7 +227,8 @@ var RemoveTempDir = [
     runElevated: true
     runAsSystem: true
     inline: [
-      'Remove-Item -Path "C:\\temp" -Recurse -Force | Out-Null; Write-Host "Removed Temp Directory"'
+      'Remove-Item -Path "C:\\temp" -Recurse -Force -ErrorAction "Stop" | Out-Null'
+      'Write-Host "Removed Temp Directory"'
     ]
   }
 ]
