@@ -111,7 +111,7 @@ var Sysprep = [
     name: 'Update the sysprep mode on the Deprovisioning Script'
     runElevated: true
     runAsSystem: true
-    inline: '$ErrorActionPreference = "Stop"; $Path = "C:\\DeprovisioningScript.ps1"; ((Get-Content -Path $Path -Raw) -replace "/quit","/quit /mode:vm") | Set-Content -Path $Path'
+    inline: '$ErrorActionPreference = "Stop"; $Path = "C:\\DeprovisioningScript.ps1"; ((Get-Content -Path $Path -Raw).Replace("/quit";"/quit /mode:vm") | Set-Content -Path $Path;'
   }
 ]
 var Teams = InstallTeams && Environment == 'AzureUSGovernment' ? [
@@ -150,7 +150,7 @@ var VDOT = InstallVirtualDesktopOptimizationTool ? [
     name: 'Download & execute the Virtual Desktop Optimization Tool'
     runElevated: true
     runAsSystem: true
-    inline: '$ErrorActionPreference = "Stop"; $ZIP = "C:\\temp\\VDOT.zip"; Invoke-WebRequest -Uri $URL -OutFile $ZIP; Unblock-File -Path $ZIP; Expand-Archive -LiteralPath $ZIP -DestinationPath "C:\temp" -Force; $Path = (Get-ChildItem -Path "C:\temp" -Recurse | Where-Object {$_.Name -eq "Windows_VDOT.ps1"}).FullName; $Script = Get-Content -Path $Path; $ScriptUpdate = $Script -replace "Set-NetAdapterAdvancedProperty", "#Set-NetAdapterAdvancedProperty"; $ScriptUpdate | Set-Content -Path $Path; & $Path -Optimizations "AppxPackages","Autologgers","DefaultUserSettings","LGPO","NetworkOptimizations","ScheduledTasks","Services","WindowsMediaPlayer" -AdvancedOptimizations "Edge","RemoveLegacyIE" -AcceptEULA; Write-Host "Optimized the operating system using the Virtual Desktop Optimization Tool";'
+    inline: '$ErrorActionPreference = "Stop"; $ZIP = "C:\\temp\\VDOT.zip"; Invoke-WebRequest -Uri "https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool/archive/refs/heads/main.zip" -OutFile $ZIP; Unblock-File -Path $ZIP; Expand-Archive -LiteralPath $ZIP -DestinationPath "C:\temp" -Force; $Path = (Get-ChildItem -Path "C:\temp" -Recurse | Where-Object {$_.Name -eq "Windows_VDOT.ps1"}).FullName; $Script = Get-Content -Path $Path; $ScriptUpdate = $Script.Replace("Set-NetAdapterAdvancedProperty";"#Set-NetAdapterAdvancedProperty"); $ScriptUpdate | Set-Content -Path $Path; & $Path -Optimizations @("AppxPackages";"Autologgers";"DefaultUserSettings";"LGPO";"NetworkOptimizations";"ScheduledTasks";"Services";"WindowsMediaPlayer") -AdvancedOptimizations @("Edge";"RemoveLegacyIE") -AcceptEULA; Write-Host "Optimized the operating system using the Virtual Desktop Optimization Tool";'
   }
   {
     type: 'WindowsRestart'

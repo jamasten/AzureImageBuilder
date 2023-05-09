@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.17.1.54307",
-      "templateHash": "1414975682047501205"
+      "templateHash": "15605167587160005176"
     }
   },
   "parameters": {
@@ -792,7 +792,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.17.1.54307",
-              "templateHash": "4546330347137574555"
+              "templateHash": "1185056028708155581"
             }
           },
           "parameters": {
@@ -931,11 +931,11 @@
                 "name": "Update the sysprep mode on the Deprovisioning Script",
                 "runElevated": true,
                 "runAsSystem": true,
-                "inline": "$ErrorActionPreference = \"Stop\"; $Path = \"C:\\DeprovisioningScript.ps1\"; ((Get-Content -Path $Path -Raw) -replace \"/quit\",\"/quit /mode:vm\") | Set-Content -Path $Path"
+                "inline": "$ErrorActionPreference = \"Stop\"; $Path = \"C:\\DeprovisioningScript.ps1\"; ((Get-Content -Path $Path -Raw).Replace(\"/quit\";\"/quit /mode:vm\") | Set-Content -Path $Path;"
               }
             ],
             "Teams": "[if(and(parameters('InstallTeams'), equals(variables('Environment'), 'AzureUSGovernment')), createArray(createObject('type', 'PowerShell', 'name', 'Enable media optimization for Teams', 'runElevated', true(), 'runAsSystem', true(), 'inline', format('if({0} -eq \"true\"){{Start-Process \"reg\" -ArgumentList \"add HKLM\\SOFTWARE\\Microsoft\\Teams /v IsWVDEnvironment /t REG_DWORD /d 1 /f\"; Write-Host \"Enabled media optimizations for Teams\"}}', variables('MultiSessionOs'))), createObject('type', 'PowerShell', 'name', 'Download & install the latest version of Microsoft Visual C++ Redistributable', 'runElevated', true(), 'runAsSystem', true(), 'inline', '$ErrorActionPreference = \"Stop\"; $File = \"C:\\temp\\vc_redist.x64.exe\"; Invoke-WebRequest -Uri \"https://aka.ms/vs/16/release/vc_redist.x64.exe\" -OutFile $File; Start-Process -FilePath $File -Args \"/install /quiet /norestart /log vcdist.log\" -Wait -PassThru | Out-Null; Write-Host \"Installed the latest version of Microsoft Visual C++ Redistributable\";'), createObject('type', 'PowerShell', 'name', 'Download & install the Remote Desktop WebRTC Redirector Service', 'runElevated', true(), 'runAsSystem', true(), 'inline', '$ErrorActionPreference = \"Stop\"; $File = \"C:\\temp\\webSocketSvc.msi\"; Invoke-WebRequest -Uri \"https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RE4AQBt\" -OutFile $File; Start-Process -FilePath msiexec.exe -Args \"/i $File /quiet /qn /norestart /passive /log webSocket.log\" -Wait -PassThru | Out-Null; Write-Host \"Installed the Remote Desktop WebRTC Redirector Service\";'), createObject('type', 'PowerShell', 'name', 'Download & install Teams', 'runElevated', true(), 'runAsSystem', true(), 'inline', format('$ErrorActionPreference = \"Stop\"; $File = \"C:\\temp\\teams.msi\"; Invoke-WebRequest -Uri {0} -OutFile $File; Start-Process -FilePath msiexec.exe -Args \"/i $File /quiet /qn /norestart /passive /log teams.log ALLUSER=1 ALLUSERS=1\" -Wait -PassThru | Out-Null; Write-Host \"Installed Teams\";', parameters('TeamsUrl')))), createArray())]",
-            "VDOT": "[if(parameters('InstallVirtualDesktopOptimizationTool'), createArray(createObject('type', 'PowerShell', 'name', 'Download & execute the Virtual Desktop Optimization Tool', 'runElevated', true(), 'runAsSystem', true(), 'inline', '$ErrorActionPreference = \"Stop\"; $ZIP = \"C:\\temp\\VDOT.zip\"; Invoke-WebRequest -Uri $URL -OutFile $ZIP; Unblock-File -Path $ZIP; Expand-Archive -LiteralPath $ZIP -DestinationPath \"C:\temp\" -Force; $Path = (Get-ChildItem -Path \"C:\temp\" -Recurse | Where-Object {$_.Name -eq \"Windows_VDOT.ps1\"}).FullName; $Script = Get-Content -Path $Path; $ScriptUpdate = $Script -replace \"Set-NetAdapterAdvancedProperty\", \"#Set-NetAdapterAdvancedProperty\"; $ScriptUpdate | Set-Content -Path $Path; & $Path -Optimizations \"AppxPackages\",\"Autologgers\",\"DefaultUserSettings\",\"LGPO\",\"NetworkOptimizations\",\"ScheduledTasks\",\"Services\",\"WindowsMediaPlayer\" -AdvancedOptimizations \"Edge\",\"RemoveLegacyIE\" -AcceptEULA; Write-Host \"Optimized the operating system using the Virtual Desktop Optimization Tool\";'), createObject('type', 'WindowsRestart', 'name', 'Restart after the execution of the Virtual Desktop Optimization Tool')), createArray())]",
+            "VDOT": "[if(parameters('InstallVirtualDesktopOptimizationTool'), createArray(createObject('type', 'PowerShell', 'name', 'Download & execute the Virtual Desktop Optimization Tool', 'runElevated', true(), 'runAsSystem', true(), 'inline', '$ErrorActionPreference = \"Stop\"; $ZIP = \"C:\\temp\\VDOT.zip\"; Invoke-WebRequest -Uri \"https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool/archive/refs/heads/main.zip\" -OutFile $ZIP; Unblock-File -Path $ZIP; Expand-Archive -LiteralPath $ZIP -DestinationPath \"C:\temp\" -Force; $Path = (Get-ChildItem -Path \"C:\temp\" -Recurse | Where-Object {$_.Name -eq \"Windows_VDOT.ps1\"}).FullName; $Script = Get-Content -Path $Path; $ScriptUpdate = $Script.Replace(\"Set-NetAdapterAdvancedProperty\";\"#Set-NetAdapterAdvancedProperty\"); $ScriptUpdate | Set-Content -Path $Path; & $Path -Optimizations @(\"AppxPackages\";\"Autologgers\";\"DefaultUserSettings\";\"LGPO\";\"NetworkOptimizations\";\"ScheduledTasks\";\"Services\";\"WindowsMediaPlayer\") -AdvancedOptimizations @(\"Edge\";\"RemoveLegacyIE\") -AcceptEULA; Write-Host \"Optimized the operating system using the Virtual Desktop Optimization Tool\";'), createObject('type', 'WindowsRestart', 'name', 'Restart after the execution of the Virtual Desktop Optimization Tool')), createArray())]",
             "RemoveTempDir": [
               {
                 "type": "PowerShell",
