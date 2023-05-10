@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.17.1.54307",
-      "templateHash": "15171070121112020899"
+      "templateHash": "3402289455941852024"
     }
   },
   "parameters": {
@@ -792,7 +792,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.17.1.54307",
-              "templateHash": "14805980390222847597"
+              "templateHash": "6927289753534163495"
             }
           },
           "parameters": {
@@ -935,7 +935,7 @@
                 "inline": [
                   "$ErrorActionPreference = \"Stop\"",
                   "$Path = \"C:\\DeprovisioningScript.ps1\"",
-                  "((Get-Content -Path $Path -Raw).Replace(\"/quit\",\"/quit /mode:vm\") | Set-Content -Path $Path",
+                  "(Get-Content -Path $Path -Raw).Replace(\"/quit\",\"/quit /mode:vm\") | Set-Content -Path $Path",
                   "Write-Host \"Updated the deprovisioning script\""
                 ]
               }

@@ -140,7 +140,7 @@ var Sysprep = [
     inline: [
       '$ErrorActionPreference = "Stop"'
       '$Path = "C:\\DeprovisioningScript.ps1"'
-      '((Get-Content -Path $Path -Raw).Replace("/quit","/quit /mode:vm") | Set-Content -Path $Path'
+      '(Get-Content -Path $Path -Raw).Replace("/quit","/quit /mode:vm") | Set-Content -Path $Path'
       'Write-Host "Updated the deprovisioning script"'
     ]
   }
