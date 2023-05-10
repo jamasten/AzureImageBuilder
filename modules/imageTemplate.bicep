@@ -101,7 +101,7 @@ var Office = InstallAccess || InstallExcel || InstallOneDriveForBusiness || Inst
     runElevated: true
     runAsSystem: true
     inline: [
-      '$Configuration = "${O365Content}"'
+      '$Configuration = \'${O365Content}\''
       '$Configuration | Out-File -FilePath "C:\\temp\\office365x64.xml" -ErrorAction "Stop"'
       'Write-Host "Uploaded the Office365 configuration file"'
     ]
@@ -211,7 +211,7 @@ var VDOT = InstallVirtualDesktopOptimizationTool ? [
       '$Script = Get-Content -Path $Path'
       '$ScriptUpdate = $Script.Replace("Set-NetAdapterAdvancedProperty","#Set-NetAdapterAdvancedProperty")'
       '$ScriptUpdate | Set-Content -Path $Path'
-      '& $Path -Optimizations @("AppxPackages","Autologgers","DefaultUserSettings","LGPO";"NetworkOptimizations","ScheduledTasks","Services","WindowsMediaPlayer") -AdvancedOptimizations @("Edge","RemoveLegacyIE") -AcceptEULA'
+      '& $Path -Optimizations @("AppxPackages","Autologgers","DefaultUserSettings","LGPO";"NetworkOptimizations","ScheduledTasks","Services","WindowsMediaPlayer") -AdvancedOptimizations "All" -AcceptEULA'
       'Write-Host "Optimized the operating system using the Virtual Desktop Optimization Tool"'
     ]
   }
