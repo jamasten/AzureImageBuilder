@@ -114,7 +114,9 @@ var Office = InstallAccess || InstallExcel || InstallOneDriveForBusiness || Inst
     inline: [
       '$ErrorActionPreference = "Stop"'
       '$Installer = "C:\\temp\\office.exe"'
-      'Invoke-WebRequest -Uri "https://download.microsoft.com/download/2/7/A/27AF1BE6-DD20-4CB4-B154-EBAB8A7D4A7E/officedeploymenttool_16327-20214.exe" -OutFile $Installer'
+      '$DownloadLinks = Invoke-WebRequest -Uri "https://www.microsoft.com/en-us/download/confirmation.aspx?id=49117"'
+      '$URL = ($DownloadLinks.Links.href | where-object {$_ -like "https://download.microsoft.com/download/*officedeploymenttool*"})[0]'
+      'Invoke-WebRequest -Uri $URL -OutFile $Installer'
       'Start-Process -FilePath $Installer -ArgumentList "/extract:C:\\temp /quiet /passive /norestart" -Wait -PassThru | Out-Null'
       'Write-Host "Downloaded & extracted the Office 365 Deployment Toolkit"'
     ]
