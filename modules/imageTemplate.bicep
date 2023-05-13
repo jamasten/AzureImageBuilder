@@ -190,7 +190,7 @@ var Teams = InstallTeams ? [
       '$ErrorActionPreference = "Stop"'
       '$File = "C:\\temp\\teams.msi"'
       'Invoke-WebRequest -Uri "${TeamsUrl}" -OutFile $File'
-      '$PerMachineConfiguration = if(${MultiSessionOs} -eq "true"){"ALLUSER=1"}else{""}'
+      '$PerMachineConfiguration = if("${MultiSessionOs}" -eq "true"){"ALLUSER=1"}else{""}'
       'Start-Process -FilePath msiexec.exe -Args "/i $File /quiet /qn /norestart /passive /log teams.log $PerMachineConfiguration ALLUSERS=1" -Wait -PassThru | Out-Null'
       'Write-Host "Installed Teams"'
     ]
