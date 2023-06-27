@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.17.1.54307",
-      "templateHash": "8309255265561986264"
+      "version": "0.18.4.5664",
+      "templateHash": "6197399358959447574"
     }
   },
   "parameters": {
@@ -359,8 +359,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.17.1.54307",
-              "templateHash": "3163069718352189003"
+              "version": "0.18.4.5664",
+              "templateHash": "4594429451020801540"
             }
           },
           "parameters": {
@@ -429,8 +429,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.17.1.54307",
-              "templateHash": "3114694774721710459"
+              "version": "0.18.4.5664",
+              "templateHash": "8088944990957828196"
             }
           },
           "parameters": {
@@ -502,8 +502,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.17.1.54307",
-              "templateHash": "9828867393297655598"
+              "version": "0.18.4.5664",
+              "templateHash": "860505930841514855"
             }
           },
           "parameters": {
@@ -617,8 +617,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.17.1.54307",
-              "templateHash": "12308001312789708638"
+              "version": "0.18.4.5664",
+              "templateHash": "3107437471824010955"
             }
           },
           "parameters": {
@@ -791,8 +791,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.17.1.54307",
-              "templateHash": "8488389081886584914"
+              "version": "0.18.4.5664",
+              "templateHash": "4506339793189090754"
             }
           },
           "parameters": {
@@ -938,7 +938,7 @@
                 ]
               }
             ],
-            "Teams": "[if(parameters('InstallTeams'), createArray(createObject('type', 'PowerShell', 'name', 'Enable media optimizations for Teams', 'runElevated', true(), 'runAsSystem', true(), 'inline', createArray('Start-Process \"reg\" -ArgumentList \"add HKLM\\SOFTWARE\\Microsoft\\Teams /v IsWVDEnvironment /t REG_DWORD /d 1 /f\" -Wait -PassThru -ErrorAction \"Stop\"', 'Write-Host \"Enabled media optimizations for Teams\"')), createObject('type', 'PowerShell', 'name', 'Download & install the latest version of Microsoft Visual C++ Redistributable', 'runElevated', true(), 'runAsSystem', true(), 'inline', createArray('$ErrorActionPreference = \"Stop\"', '$File = \"C:\\temp\\vc_redist.x64.exe\"', 'Invoke-WebRequest -Uri \"https://aka.ms/vs/16/release/vc_redist.x64.exe\" -OutFile $File', 'Start-Process -FilePath $File -Args \"/install /quiet /norestart /log vcdist.log\" -Wait -PassThru | Out-Null', 'Write-Host \"Installed the latest version of Microsoft Visual C++ Redistributable\"')), createObject('type', 'PowerShell', 'name', 'Download & install the Remote Desktop WebRTC Redirector Service', 'runElevated', true(), 'runAsSystem', true(), 'inline', createArray('$ErrorActionPreference = \"Stop\"', '$File = \"C:\\temp\\webSocketSvc.msi\"', 'Invoke-WebRequest -Uri \"https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RE4AQBt\" -OutFile $File', 'Start-Process -FilePath msiexec.exe -Args \"/i $File /quiet /qn /norestart /passive /log webSocket.log\" -Wait -PassThru | Out-Null', 'Write-Host \"Installed the Remote Desktop WebRTC Redirector Service\"')), createObject('type', 'PowerShell', 'name', 'Download & install Teams', 'runElevated', true(), 'runAsSystem', true(), 'inline', createArray('$ErrorActionPreference = \"Stop\"', '$File = \"C:\\temp\\teams.msi\"', format('Invoke-WebRequest -Uri \"{0}\" -OutFile $File', parameters('TeamsUrl')), format('$PerMachineConfiguration = if(\"{0}\" -eq \"true\"){{\"ALLUSER=1\"}}else{{\"\"}}', variables('MultiSessionOs')), 'Start-Process -FilePath msiexec.exe -Args \"/i $File /quiet /qn /norestart /passive /log teams.log $PerMachineConfiguration ALLUSERS=1\" -Wait -PassThru | Out-Null', 'Write-Host \"Installed Teams\"'))), createArray())]",
+            "Teams": "[if(parameters('InstallTeams'), createArray(createObject('type', 'PowerShell', 'name', 'Enable media optimizations for Teams', 'runElevated', true(), 'runAsSystem', true(), 'inline', createArray('Start-Process \"reg\" -ArgumentList \"add HKLM\\SOFTWARE\\Microsoft\\Teams /v IsWVDEnvironment /t REG_DWORD /d 1 /f\" -Wait -PassThru -ErrorAction \"Stop\"', 'Write-Host \"Enabled media optimizations for Teams\"')), createObject('type', 'PowerShell', 'name', 'Download & install the latest version of Microsoft Visual C++ Redistributable', 'runElevated', true(), 'runAsSystem', true(), 'inline', createArray('$ErrorActionPreference = \"Stop\"', '$File = \"C:\\temp\\vc_redist.x64.exe\"', 'Invoke-WebRequest -Uri \"https://aka.ms/vs/16/release/vc_redist.x64.exe\" -OutFile $File', 'Start-Process -FilePath $File -Args \"/install /quiet /norestart /log vcdist.log\" -Wait -PassThru | Out-Null', 'Write-Host \"Installed the latest version of Microsoft Visual C++ Redistributable\"')), createObject('type', 'PowerShell', 'name', 'Download & install the Remote Desktop WebRTC Redirector Service', 'runElevated', true(), 'runAsSystem', true(), 'inline', createArray('$ErrorActionPreference = \"Stop\"', '$File = \"C:\\temp\\webSocketSvc.msi\"', 'Invoke-WebRequest -Uri \"https://aka.ms/msrdcwebrtcsvc/msi\" -OutFile $File', 'Start-Process -FilePath msiexec.exe -Args \"/i $File /quiet /qn /norestart /passive /log webSocket.log\" -Wait -PassThru | Out-Null', 'Write-Host \"Installed the Remote Desktop WebRTC Redirector Service\"')), createObject('type', 'PowerShell', 'name', 'Download & install Teams', 'runElevated', true(), 'runAsSystem', true(), 'inline', createArray('$ErrorActionPreference = \"Stop\"', '$File = \"C:\\temp\\teams.msi\"', format('Invoke-WebRequest -Uri \"{0}\" -OutFile $File', parameters('TeamsUrl')), format('$PerMachineConfiguration = if(\"{0}\" -eq \"true\"){{\"ALLUSER=1\"}}else{{\"\"}}', variables('MultiSessionOs')), 'Start-Process -FilePath msiexec.exe -Args \"/i $File /quiet /qn /norestart /passive /log teams.log $PerMachineConfiguration ALLUSERS=1\" -Wait -PassThru | Out-Null', 'Write-Host \"Installed Teams\"'))), createArray())]",
             "VDOT": "[if(parameters('InstallVirtualDesktopOptimizationTool'), createArray(createObject('type', 'PowerShell', 'name', 'Download & execute the Virtual Desktop Optimization Tool', 'runElevated', true(), 'runAsSystem', true(), 'inline', createArray('$ErrorActionPreference = \"Stop\"', '$ZIP = \"C:\\temp\\VDOT.zip\"', 'Invoke-WebRequest -Uri \"https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool/archive/refs/heads/main.zip\" -OutFile $ZIP', 'Unblock-File -Path $ZIP', 'Expand-Archive -LiteralPath $ZIP -DestinationPath \"C:\\temp\" -Force', '$Path = (Get-ChildItem -Path \"C:\\temp\" -Recurse | Where-Object {$_.Name -eq \"Windows_VDOT.ps1\"}).FullName', '$Script = Get-Content -Path $Path', '$ScriptUpdate = $Script.Replace(\"Set-NetAdapterAdvancedProperty\",\"#Set-NetAdapterAdvancedProperty\")', '$ScriptUpdate | Set-Content -Path $Path', '& $Path -Optimizations @(\"AppxPackages\",\"Autologgers\",\"DefaultUserSettings\",\"LGPO\";\"NetworkOptimizations\",\"ScheduledTasks\",\"Services\",\"WindowsMediaPlayer\") -AdvancedOptimizations \"All\" -AcceptEULA', 'Write-Host \"Optimized the operating system using the Virtual Desktop Optimization Tool\"')), createObject('type', 'WindowsRestart', 'name', 'Restart after the execution of the Virtual Desktop Optimization Tool')), createArray())]",
             "RemoveTempDir": [
               {
@@ -1046,8 +1046,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.17.1.54307",
-              "templateHash": "4794203918987823520"
+              "version": "0.18.4.5664",
+              "templateHash": "5895464842854407030"
             }
           },
           "parameters": {

@@ -176,7 +176,7 @@ var Teams = InstallTeams ? [
     inline: [
       '$ErrorActionPreference = "Stop"'
       '$File = "C:\\temp\\webSocketSvc.msi"'
-      'Invoke-WebRequest -Uri "https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RE4AQBt" -OutFile $File'
+      'Invoke-WebRequest -Uri "https://aka.ms/msrdcwebrtcsvc/msi" -OutFile $File'
       'Start-Process -FilePath msiexec.exe -Args "/i $File /quiet /qn /norestart /passive /log webSocket.log" -Wait -PassThru | Out-Null'
       'Write-Host "Installed the Remote Desktop WebRTC Redirector Service"'
     ]
